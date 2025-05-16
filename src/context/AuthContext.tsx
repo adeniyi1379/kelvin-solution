@@ -1,13 +1,13 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
   username: string;
   role: 'user' | 'admin';
+  password?: string; // Added password field as optional
 }
 
 interface AuthContextType {
