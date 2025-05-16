@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -17,7 +17,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      await login(username, password);
+      await login(email, password);
     } finally {
       setIsLoading(false);
     }
@@ -35,12 +35,13 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -64,9 +65,7 @@ const Login = () => {
         </form>
         
         <div className="px-6 pb-4 text-center text-xs text-gray-500">
-          <p className="mt-2">Demo Credentials:</p>
-          <p>Admin: admin / admin123</p>
-          <p>User: user / user123</p>
+          <p className="mt-2">Note: You'll need to create users in Supabase Auth</p>
         </div>
       </Card>
     </div>

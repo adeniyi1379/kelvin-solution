@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from './AuthContext';
 
 export interface Transaction {
   id: string;
@@ -11,6 +12,7 @@ export interface Transaction {
   isPaid: boolean;
   description: string;
   date: string;
+  user_id: string;
 }
 
 export interface PhoneModel {
@@ -27,7 +29,7 @@ interface DataContextType {
   transactions: Transaction[];
   phoneModels: PhoneModel[];
   serviceTypes: ServiceType[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'user_id'>) => void;
   updateTransactionStatus: (id: string, isPaid: boolean) => void;
   addPhoneModel: (name: string) => void;
   updatePhoneModel: (id: string, name: string) => void;
@@ -37,154 +39,242 @@ interface DataContextType {
   deleteServiceType: (id: string) => void;
 }
 
-const defaultPhoneModels: PhoneModel[] = [
-  { id: '1', name: 'iPhone 13' },
-  { id: '2', name: 'Samsung Galaxy S21' },
-  { id: '3', name: 'Google Pixel 6' },
-];
-
-const defaultServiceTypes: ServiceType[] = [
-  { id: '1', name: 'New Purchase' },
-  { id: '2', name: 'Screen Repair' },
-  { id: '3', name: 'Battery Replacement' },
-];
-
-const defaultTransactions: Transaction[] = [
-  {
-    id: '1',
-    phoneName: 'iPhone 13',
-    serviceType: 'New Purchase',
-    amount: 999,
-    isPaid: true,
-    description: 'New phone purchase',
-    date: new Date().toISOString()
-  },
-  {
-    id: '2',
-    phoneName: 'Samsung Galaxy S21',
-    serviceType: 'Screen Repair',
-    amount: 250,
-    isPaid: false,
-    description: 'Cracked screen repair',
-    date: new Date().toISOString()
-  }
-];
-
 export const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [phoneModels, setPhoneModels] = useState<PhoneModel[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const { currentUser, isAuthenticated } = useAuth();
 
+  // Load data when user is authenticated
   useEffect(() => {
-    // Load data from localStorage or use defaults
-    const storedTransactions = localStorage.getItem('phone_sales_transactions');
-    const storedPhoneModels = localStorage.getItem('phone_sales_phone_models');
-    const storedServiceTypes = localStorage.getItem('phone_sales_service_types');
+    if (!isAuthenticated || !currentUser) return;
 
-    if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
-    } else {
-      setTransactions(defaultTransactions);
-      localStorage.setItem('phone_sales_transactions', JSON.stringify(defaultTransactions));
-    }
+    const fetchData = async () => {
+      try {
+        // Fetch transactions
+        const { data: transactionData, error: transactionError } = await supabase
+          .from('transactions')
+          .select('*');
 
-    if (storedPhoneModels) {
-      setPhoneModels(JSON.parse(storedPhoneModels));
-    } else {
-      setPhoneModels(defaultPhoneModels);
-      localStorage.setItem('phone_sales_phone_models', JSON.stringify(defaultPhoneModels));
-    }
+        if (transactionError) {
+          toast.error(`Error loading transactions: ${transactionError.message}`);
+        } else if (transactionData) {
+          setTransactions(transactionData);
+        }
 
-    if (storedServiceTypes) {
-      setServiceTypes(JSON.parse(storedServiceTypes));
-    } else {
-      setServiceTypes(defaultServiceTypes);
-      localStorage.setItem('phone_sales_service_types', JSON.stringify(defaultServiceTypes));
-    }
-  }, []);
+        // Fetch phone models
+        const { data: phoneData, error: phoneError } = await supabase
+          .from('phone_models')
+          .select('*');
 
-  // Save data whenever it changes
-  useEffect(() => {
-    if (transactions.length > 0) {
-      localStorage.setItem('phone_sales_transactions', JSON.stringify(transactions));
-    }
-  }, [transactions]);
+        if (phoneError) {
+          toast.error(`Error loading phone models: ${phoneError.message}`);
+        } else if (phoneData) {
+          setPhoneModels(phoneData);
+        }
 
-  useEffect(() => {
-    if (phoneModels.length > 0) {
-      localStorage.setItem('phone_sales_phone_models', JSON.stringify(phoneModels));
-    }
-  }, [phoneModels]);
+        // Fetch service types
+        const { data: serviceData, error: serviceError } = await supabase
+          .from('service_types')
+          .select('*');
 
-  useEffect(() => {
-    if (serviceTypes.length > 0) {
-      localStorage.setItem('phone_sales_service_types', JSON.stringify(serviceTypes));
-    }
-  }, [serviceTypes]);
+        if (serviceError) {
+          toast.error(`Error loading service types: ${serviceError.message}`);
+        } else if (serviceData) {
+          setServiceTypes(serviceData);
+        }
+      } catch (error) {
+        toast.error('Failed to fetch data');
+        console.error(error);
+      }
+    };
 
-  const addTransaction = (transaction: Omit<Transaction, 'id' | 'date'>) => {
-    const newTransaction: Transaction = {
+    fetchData();
+  }, [isAuthenticated, currentUser]);
+
+  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'user_id'>) => {
+    if (!currentUser) return;
+
+    const newTransaction = {
       ...transaction,
-      id: uuidv4(),
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      user_id: currentUser.id
     };
     
-    setTransactions([...transactions, newTransaction]);
-    toast.success('Transaction added successfully');
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(newTransaction)
+        .select();
+
+      if (error) {
+        toast.error(`Failed to add transaction: ${error.message}`);
+        return;
+      }
+      
+      if (data && data[0]) {
+        setTransactions([...transactions, data[0]]);
+        toast.success('Transaction added successfully');
+      }
+    } catch (error) {
+      toast.error('Failed to add transaction');
+      console.error(error);
+    }
   };
 
-  const updateTransactionStatus = (id: string, isPaid: boolean) => {
-    const updatedTransactions = transactions.map(transaction => 
-      transaction.id === id ? { ...transaction, isPaid } : transaction
-    );
-    setTransactions(updatedTransactions);
-    toast.success('Transaction status updated');
+  const updateTransactionStatus = async (id: string, isPaid: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({ isPaid })
+        .eq('id', id);
+
+      if (error) {
+        toast.error(`Failed to update transaction: ${error.message}`);
+        return;
+      }
+      
+      const updatedTransactions = transactions.map(transaction => 
+        transaction.id === id ? { ...transaction, isPaid } : transaction
+      );
+      setTransactions(updatedTransactions);
+      toast.success('Transaction status updated');
+    } catch (error) {
+      toast.error('Failed to update transaction status');
+      console.error(error);
+    }
   };
 
-  const addPhoneModel = (name: string) => {
-    const newPhoneModel: PhoneModel = {
-      id: uuidv4(),
-      name
-    };
-    setPhoneModels([...phoneModels, newPhoneModel]);
-    toast.success('Phone model added');
+  const addPhoneModel = async (name: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('phone_models')
+        .insert({ name })
+        .select();
+
+      if (error) {
+        toast.error(`Failed to add phone model: ${error.message}`);
+        return;
+      }
+      
+      if (data && data[0]) {
+        setPhoneModels([...phoneModels, data[0]]);
+        toast.success('Phone model added');
+      }
+    } catch (error) {
+      toast.error('Failed to add phone model');
+      console.error(error);
+    }
   };
 
-  const updatePhoneModel = (id: string, name: string) => {
-    const updatedPhoneModels = phoneModels.map(model => 
-      model.id === id ? { ...model, name } : model
-    );
-    setPhoneModels(updatedPhoneModels);
-    toast.success('Phone model updated');
+  const updatePhoneModel = async (id: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('phone_models')
+        .update({ name })
+        .eq('id', id);
+
+      if (error) {
+        toast.error(`Failed to update phone model: ${error.message}`);
+        return;
+      }
+      
+      const updatedPhoneModels = phoneModels.map(model => 
+        model.id === id ? { ...model, name } : model
+      );
+      setPhoneModels(updatedPhoneModels);
+      toast.success('Phone model updated');
+    } catch (error) {
+      toast.error('Failed to update phone model');
+      console.error(error);
+    }
   };
 
-  const deletePhoneModel = (id: string) => {
-    setPhoneModels(phoneModels.filter(model => model.id !== id));
-    toast.success('Phone model deleted');
+  const deletePhoneModel = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('phone_models')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast.error(`Failed to delete phone model: ${error.message}`);
+        return;
+      }
+      
+      setPhoneModels(phoneModels.filter(model => model.id !== id));
+      toast.success('Phone model deleted');
+    } catch (error) {
+      toast.error('Failed to delete phone model');
+      console.error(error);
+    }
   };
 
-  const addServiceType = (name: string) => {
-    const newServiceType: ServiceType = {
-      id: uuidv4(),
-      name
-    };
-    setServiceTypes([...serviceTypes, newServiceType]);
-    toast.success('Service type added');
+  const addServiceType = async (name: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('service_types')
+        .insert({ name })
+        .select();
+
+      if (error) {
+        toast.error(`Failed to add service type: ${error.message}`);
+        return;
+      }
+      
+      if (data && data[0]) {
+        setServiceTypes([...serviceTypes, data[0]]);
+        toast.success('Service type added');
+      }
+    } catch (error) {
+      toast.error('Failed to add service type');
+      console.error(error);
+    }
   };
 
-  const updateServiceType = (id: string, name: string) => {
-    const updatedServiceTypes = serviceTypes.map(type => 
-      type.id === id ? { ...type, name } : type
-    );
-    setServiceTypes(updatedServiceTypes);
-    toast.success('Service type updated');
+  const updateServiceType = async (id: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('service_types')
+        .update({ name })
+        .eq('id', id);
+
+      if (error) {
+        toast.error(`Failed to update service type: ${error.message}`);
+        return;
+      }
+      
+      const updatedServiceTypes = serviceTypes.map(type => 
+        type.id === id ? { ...type, name } : type
+      );
+      setServiceTypes(updatedServiceTypes);
+      toast.success('Service type updated');
+    } catch (error) {
+      toast.error('Failed to update service type');
+      console.error(error);
+    }
   };
 
-  const deleteServiceType = (id: string) => {
-    setServiceTypes(serviceTypes.filter(type => type.id !== id));
-    toast.success('Service type deleted');
+  const deleteServiceType = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('service_types')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast.error(`Failed to delete service type: ${error.message}`);
+        return;
+      }
+      
+      setServiceTypes(serviceTypes.filter(type => type.id !== id));
+      toast.success('Service type deleted');
+    } catch (error) {
+      toast.error('Failed to delete service type');
+      console.error(error);
+    }
   };
 
   const value = {

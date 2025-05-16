@@ -1,74 +1,126 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
   username: string;
-  password: string;
   role: 'user' | 'admin';
 }
 
 interface AuthContextType {
   currentUser: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
-
-const defaultUsers: User[] = [
-  { id: '1', username: 'admin', password: 'admin123', role: 'admin' },
-  { id: '2', username: 'user', password: 'user123', role: 'user' }
-];
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    // Load users from localStorage or use defaults
-    const storedUsers = localStorage.getItem('phone_sales_users');
-    if (storedUsers) {
-      setUsers(JSON.parse(storedUsers));
-    } else {
-      setUsers(defaultUsers);
-      localStorage.setItem('phone_sales_users', JSON.stringify(defaultUsers));
-    }
-    
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem('phone_sales_current_user');
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-    }
-  }, []);
+    // Check if the user is already logged in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    const user = users.find(
-      (user) => user.username === username && user.password === password
+        if (userProfile) {
+          setCurrentUser({
+            id: session.user.id,
+            username: userProfile.username || session.user.email || '',
+            role: userProfile.role || 'user'
+          });
+          setIsAuthenticated(true);
+        }
+      }
+    };
+
+    checkUser();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (userProfile) {
+            setCurrentUser({
+              id: session.user.id,
+              username: userProfile.username || session.user.email || '',
+              role: userProfile.role || 'user'
+            });
+            setIsAuthenticated(true);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+        }
+      }
     );
 
-    if (user) {
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      localStorage.setItem('phone_sales_current_user', JSON.stringify(user));
-      toast.success('Login successful!');
-      return true;
-    } else {
-      toast.error('Invalid username or password');
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      if (data.user) {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (userProfile) {
+          setCurrentUser({
+            id: data.user.id,
+            username: userProfile.username || data.user.email || '',
+            role: userProfile.role || 'user'
+          });
+          setIsAuthenticated(true);
+          toast.success('Login successful!');
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      toast.error('An error occurred during login');
       return false;
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setCurrentUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('phone_sales_current_user');
     toast.info('You have been logged out');
   };
 
