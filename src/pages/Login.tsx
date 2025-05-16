@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,11 +15,23 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast.error('Please enter both email and password');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      await login(email, password);
-    } finally {
+      const success = await login(email, password);
+      if (!success) {
+        // Login function already shows error toasts
+        setIsLoading(false);
+      }
+      // If successful, the page will reload via the login function
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('An unexpected error occurred');
       setIsLoading(false);
     }
   };
@@ -43,6 +56,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -54,6 +68,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
           </CardContent>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,7 +61,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (transactionError) {
           toast.error(`Error loading transactions: ${transactionError.message}`);
         } else if (transactionData) {
-          setTransactions(transactionData);
+          // Convert the data to match our Transaction interface
+          const formattedTransactions: Transaction[] = transactionData.map((item: any) => ({
+            id: item.id.toString(),
+            phoneName: item.phoneName,
+            serviceType: item.serviceType,
+            amount: Number(item.amount),
+            isPaid: item.isPaid === 'true' || item.isPaid === true,
+            description: item.description,
+            date: item.date,
+            user_id: item.user_id || currentUser.id
+          }));
+          setTransactions(formattedTransactions);
         }
 
         // Fetch phone models
@@ -71,7 +83,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (phoneError) {
           toast.error(`Error loading phone models: ${phoneError.message}`);
         } else if (phoneData) {
-          setPhoneModels(phoneData);
+          // Convert the data to match our PhoneModel interface
+          const formattedPhoneModels: PhoneModel[] = phoneData.map((item: any) => ({
+            id: item.id.toString(),
+            name: item.name
+          }));
+          setPhoneModels(formattedPhoneModels);
         }
 
         // Fetch service types
@@ -82,7 +99,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (serviceError) {
           toast.error(`Error loading service types: ${serviceError.message}`);
         } else if (serviceData) {
-          setServiceTypes(serviceData);
+          // Convert the data to match our ServiceType interface
+          const formattedServiceTypes: ServiceType[] = serviceData.map((item: any) => ({
+            id: item.id.toString(),
+            name: item.name
+          }));
+          setServiceTypes(formattedServiceTypes);
         }
       } catch (error) {
         toast.error('Failed to fetch data');
@@ -98,6 +120,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const newTransaction = {
       ...transaction,
+      isPaid: transaction.isPaid.toString(), // Convert boolean to string for the database
       date: new Date().toISOString(),
       user_id: currentUser.id
     };
@@ -114,7 +137,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data && data[0]) {
-        setTransactions([...transactions, data[0]]);
+        const formattedTransaction: Transaction = {
+          id: data[0].id.toString(),
+          phoneName: data[0].phoneName,
+          serviceType: data[0].serviceType,
+          amount: Number(data[0].amount),
+          isPaid: data[0].isPaid === 'true' || data[0].isPaid === true,
+          description: data[0].description,
+          date: data[0].date,
+          user_id: data[0].user_id || currentUser.id
+        };
+        setTransactions([...transactions, formattedTransaction]);
         toast.success('Transaction added successfully');
       }
     } catch (error) {
@@ -127,7 +160,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase
         .from('transactions')
-        .update({ isPaid })
+        .update({ isPaid: isPaid.toString() }) // Convert boolean to string
         .eq('id', id);
 
       if (error) {
@@ -159,7 +192,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data && data[0]) {
-        setPhoneModels([...phoneModels, data[0]]);
+        const newPhoneModel: PhoneModel = {
+          id: data[0].id.toString(),
+          name: data[0].name
+        };
+        setPhoneModels([...phoneModels, newPhoneModel]);
         toast.success('Phone model added');
       }
     } catch (error) {
@@ -224,7 +261,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data && data[0]) {
-        setServiceTypes([...serviceTypes, data[0]]);
+        const newServiceType: ServiceType = {
+          id: data[0].id.toString(),
+          name: data[0].name
+        };
+        setServiceTypes([...serviceTypes, newServiceType]);
         toast.success('Service type added');
       }
     } catch (error) {

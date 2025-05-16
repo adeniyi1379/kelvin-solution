@@ -21,6 +21,24 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to clean up auth state
+const cleanupAuthState = () => {
+  // Remove standard auth tokens
+  localStorage.removeItem('supabase.auth.token');
+  // Remove all Supabase auth keys from localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  // Remove from sessionStorage if in use
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentUser({
             id: session.user.id,
             username: userProfile.username || session.user.email || '',
-            role: userProfile.role as 'user' | 'admin' || 'user'
+            role: (userProfile.role as 'user' | 'admin') || 'user'
           });
           setIsAuthenticated(true);
         }
@@ -54,20 +72,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          // Defer data fetching to prevent deadlocks
+          setTimeout(async () => {
+            const { data: userProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
-          if (userProfile) {
-            setCurrentUser({
-              id: session.user.id,
-              username: userProfile.username || session.user.email || '',
-              role: userProfile.role as 'user' | 'admin' || 'user'
-            });
-            setIsAuthenticated(true);
-          }
+            if (userProfile) {
+              setCurrentUser({
+                id: session.user.id,
+                username: userProfile.username || session.user.email || '',
+                role: (userProfile.role as 'user' | 'admin') || 'user'
+              });
+              setIsAuthenticated(true);
+            }
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           setCurrentUser(null);
           setIsAuthenticated(false);
@@ -82,6 +103,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // Clean up existing auth state
+      cleanupAuthState();
+      
+      // Attempt to sign out any existing sessions
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (error) {
+        // Continue even if this fails
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -103,10 +134,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentUser({
             id: data.user.id,
             username: userProfile.username || data.user.email || '',
-            role: userProfile.role as 'user' | 'admin' || 'user'
+            role: (userProfile.role as 'user' | 'admin') || 'user'
           });
           setIsAuthenticated(true);
           toast.success('Login successful!');
+          
+          // Force page reload for a clean state
+          window.location.href = '/';
           return true;
         }
       }
@@ -119,10 +153,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    // Clean up auth state
+    cleanupAuthState();
+    
+    try {
+      // Attempt global sign out
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (error) {
+      // Ignore errors
+    }
+    
     setCurrentUser(null);
     setIsAuthenticated(false);
     toast.info('You have been logged out');
+    
+    // Force page reload for a clean state
+    window.location.href = '/login';
   };
 
   const isAdmin = currentUser?.role === 'admin';
