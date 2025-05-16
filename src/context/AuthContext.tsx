@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentUser({
             id: session.user.id,
             username: userProfile.username || session.user.email || '',
-            role: userProfile.role || 'user'
+            role: userProfile.role as 'user' | 'admin' || 'user'
           });
           setIsAuthenticated(true);
         }
@@ -63,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCurrentUser({
               id: session.user.id,
               username: userProfile.username || session.user.email || '',
-              role: userProfile.role || 'user'
+              role: userProfile.role as 'user' | 'admin' || 'user'
             });
             setIsAuthenticated(true);
           }
@@ -102,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentUser({
             id: data.user.id,
             username: userProfile.username || data.user.email || '',
-            role: userProfile.role || 'user'
+            role: userProfile.role as 'user' | 'admin' || 'user'
           });
           setIsAuthenticated(true);
           toast.success('Login successful!');
