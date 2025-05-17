@@ -257,7 +257,7 @@ const ServiceTypesSection = () => {
 const UserManagementSection = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [newUsername, setNewUsername] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState<'user' | 'admin'>('user');
   
   // Load users from localStorage
@@ -270,11 +270,11 @@ const UserManagementSection = () => {
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newUsername.trim() && newPassword.trim()) {
+    if (newUsername.trim() && newEmail.trim()) {
       const newUser: User = {
         id: Date.now().toString(),
         username: newUsername.trim(),
-        password: newPassword.trim(),
+        email: newEmail.trim(),
         role: newRole
       };
       
@@ -284,7 +284,7 @@ const UserManagementSection = () => {
       
       // Clear form
       setNewUsername('');
-      setNewPassword('');
+      setNewEmail('');
       setNewRole('user');
     }
   };
@@ -315,13 +315,13 @@ const UserManagementSection = () => {
               />
             </div>
             <div>
-              <Label htmlFor="new-password">Password</Label>
+              <Label htmlFor="new-email">Email</Label>
               <Input
-                id="new-password"
-                type="password"
-                placeholder="Password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                id="new-email"
+                type="email"
+                placeholder="Email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
                 required
               />
             </div>
@@ -336,6 +336,7 @@ const UserManagementSection = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Username</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -345,6 +346,7 @@ const UserManagementSection = () => {
                 users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>{user.username}</TableCell>
+                    <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -369,7 +371,7 @@ const UserManagementSection = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-6 text-gray-500">
+                  <TableCell colSpan={4} className="text-center py-6 text-gray-500">
                     No users available
                   </TableCell>
                 </TableRow>
