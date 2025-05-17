@@ -2,19 +2,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
   username: string;
   role: 'user' | 'admin';
-  password?: string; // Added password field as optional
+  email?: string;
 }
 
 interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  loginWithUsername: (username: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -58,9 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (userProfile) {
           setCurrentUser({
-            id: String(userProfile.id),
+            id: userProfile.id.toString(),
             username: userProfile.username || session.user.email || '',
-            role: (userProfile.role as 'user' | 'admin') || 'user'
+            role: (userProfile.role as 'user' | 'admin') || 'user',
+            email: session.user.email
           });
           setIsAuthenticated(true);
         }
@@ -83,9 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (userProfile) {
               setCurrentUser({
-                id: String(userProfile.id),
+                id: userProfile.id.toString(),
                 username: userProfile.username || session.user.email || '',
-                role: (userProfile.role as 'user' | 'admin') || 'user'
+                role: (userProfile.role as 'user' | 'admin') || 'user',
+                email: session.user.email
               });
               setIsAuthenticated(true);
             }
@@ -133,9 +133,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (userProfile) {
           setCurrentUser({
-            id: String(userProfile.id),
+            id: userProfile.id.toString(),
             username: userProfile.username || data.user.email || '',
-            role: (userProfile.role as 'user' | 'admin') || 'user'
+            role: (userProfile.role as 'user' | 'admin') || 'user',
+            email: data.user.email
           });
           setIsAuthenticated(true);
           toast.success('Login successful!');
@@ -148,67 +149,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return false;
     } catch (error) {
-      toast.error('An error occurred during login');
-      return false;
-    }
-  };
-
-  const loginWithUsername = async (username: string): Promise<boolean> => {
-    try {
-      // Clean up existing auth state
-      cleanupAuthState();
-      
-      // Attempt to sign out any existing sessions
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (error) {
-        // Continue even if this fails
-      }
-
-      // Find the profile with the given username
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('username', username)
-        .single();
-
-      if (profileError || !profileData) {
-        toast.error('Username not found');
-        return false;
-      }
-
-      // For this simplified version, we're skipping password checks
-      // This is not secure for production, but allows testing with just usernames
-
-      // Create a session for this user
-      // Note: This is a workaround and not secure - only for development purposes
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: `${username}@example.com`, // This is a placeholder
-        password: "password123"  // This is a placeholder
-      });
-
-      if (error) {
-        toast.error('Authentication failed. Please ensure the user exists in Supabase Auth.');
-        return false;
-      }
-
-      if (data.user) {
-        setCurrentUser({
-          id: String(profileData.id),
-          username: profileData.username || '',
-          role: (profileData.role as 'user' | 'admin') || 'user'
-        });
-        setIsAuthenticated(true);
-        toast.success('Login successful!');
-        
-        // Force page reload for a clean state
-        window.location.href = '/';
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
       toast.error('An error occurred during login');
       return false;
     }
@@ -238,7 +178,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     currentUser,
     login,
-    loginWithUsername,
     logout,
     isAuthenticated,
     isAdmin

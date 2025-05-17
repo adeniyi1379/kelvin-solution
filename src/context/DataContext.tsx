@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +11,7 @@ export interface Transaction {
   isPaid: boolean;
   description: string;
   date: string;
-  user_id: string;
+  user_id?: string;
 }
 
 export interface PhoneModel {
