@@ -120,7 +120,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const newTransaction = {
       ...transaction,
-      isPaid: transaction.isPaid.toString(), // Convert boolean to string for the database
+      isPaid: String(transaction.isPaid), // Convert boolean to string for the database
       date: new Date().toISOString(),
       user_id: currentUser.id
     };
@@ -160,7 +160,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase
         .from('transactions')
-        .update({ isPaid: isPaid.toString() }) // Convert boolean to string
+        .update({ isPaid: String(isPaid) }) // Convert boolean to string
         .eq('id', id);
 
       if (error) {

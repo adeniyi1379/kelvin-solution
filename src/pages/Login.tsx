@@ -8,24 +8,22 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { loginWithUsername } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error('Please enter both email and password');
+    if (!username) {
+      toast.error('Please enter your username');
       return;
     }
     
     setIsLoading(true);
     
     try {
-      const success = await login(email, password);
+      const success = await loginWithUsername(username);
       if (!success) {
-        // Login function already shows error toasts
         setIsLoading(false);
       }
       // If successful, the page will reload via the login function
@@ -42,31 +40,19 @@ const Login = () => {
         <CardHeader>
           <CardTitle className="text-2xl">Phone Sales Manager</CardTitle>
           <CardDescription>
-            Enter your credentials to access the application
+            Enter your username to access the application
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 disabled={isLoading}
               />
@@ -80,7 +66,7 @@ const Login = () => {
         </form>
         
         <div className="px-6 pb-4 text-center text-xs text-gray-500">
-          <p className="mt-2">Note: You'll need to create users in Supabase Auth</p>
+          <p className="mt-2">Note: Make sure usernames exist in your profiles table</p>
         </div>
       </Card>
     </div>
