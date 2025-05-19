@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 
 export interface Transaction {
-  id: string;
+  id: number;
   phoneName: string;
   serviceType: string;
   amount: number;
@@ -16,12 +16,12 @@ export interface Transaction {
 }
 
 export interface PhoneModel {
-  id: string;
+  id: number;
   name: string;
 }
 
 export interface ServiceType {
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -30,13 +30,13 @@ interface DataContextType {
   phoneModels: PhoneModel[];
   serviceTypes: ServiceType[];
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'user_id'>) => void;
-  updateTransactionStatus: (id: string, isPaid: boolean) => void;
+  updateTransactionStatus: (id: number, isPaid: boolean) => void;
   addPhoneModel: (name: string) => void;
-  updatePhoneModel: (id: string, name: string) => void;
-  deletePhoneModel: (id: string) => void;
+  updatePhoneModel: (id: number, name: string) => void;
+  deletePhoneModel: (id: number) => void;
   addServiceType: (name: string) => void;
-  updateServiceType: (id: string, name: string) => void;
-  deleteServiceType: (id: string) => void;
+  updateServiceType: (id: number, name: string) => void;
+  deleteServiceType: (id: number) => void;
 }
 
 export const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -63,14 +63,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (transactionData) {
           // Convert the data to match our Transaction interface
           const formattedTransactions: Transaction[] = transactionData.map((item: any) => ({
-            id: item.id.toString(),
+            id: item.id,
             phoneName: item.phoneName,
             serviceType: item.serviceType,
             amount: Number(item.amount),
             isPaid: item.isPaid === 'true' || item.isPaid === true,
             description: item.description,
             date: item.date,
-            user_id: item.user_id || currentUser.id
+            user_id: currentUser?.id.toString()
           }));
           setTransactions(formattedTransactions);
         }
@@ -85,7 +85,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (phoneData) {
           // Convert the data to match our PhoneModel interface
           const formattedPhoneModels: PhoneModel[] = phoneData.map((item: any) => ({
-            id: item.id.toString(),
+            id: item.id,
             name: item.name
           }));
           setPhoneModels(formattedPhoneModels);
@@ -101,7 +101,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (serviceData) {
           // Convert the data to match our ServiceType interface
           const formattedServiceTypes: ServiceType[] = serviceData.map((item: any) => ({
-            id: item.id.toString(),
+            id: item.id,
             name: item.name
           }));
           setServiceTypes(formattedServiceTypes);
@@ -122,7 +122,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...transaction,
       isPaid: String(transaction.isPaid), // Convert boolean to string for the database
       date: new Date().toISOString(),
-      user_id: currentUser.id
+      user_id: currentUser.id.toString()
     };
     
     try {
@@ -138,14 +138,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data && data[0]) {
         const formattedTransaction: Transaction = {
-          id: data[0].id.toString(),
+          id: data[0].id,
           phoneName: data[0].phoneName,
           serviceType: data[0].serviceType,
           amount: Number(data[0].amount),
           isPaid: data[0].isPaid === 'true' || data[0].isPaid === true,
           description: data[0].description,
           date: data[0].date,
-          user_id: data[0].user_id || currentUser.id
+          user_id: currentUser.id.toString()
         };
         setTransactions([...transactions, formattedTransaction]);
         toast.success('Transaction added successfully');
@@ -156,7 +156,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateTransactionStatus = async (id: string, isPaid: boolean) => {
+  const updateTransactionStatus = async (id: number, isPaid: boolean) => {
     try {
       const { error } = await supabase
         .from('transactions')
@@ -193,7 +193,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data && data[0]) {
         const newPhoneModel: PhoneModel = {
-          id: data[0].id.toString(),
+          id: data[0].id,
           name: data[0].name
         };
         setPhoneModels([...phoneModels, newPhoneModel]);
@@ -205,7 +205,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updatePhoneModel = async (id: string, name: string) => {
+  const updatePhoneModel = async (id: number, name: string) => {
     try {
       const { error } = await supabase
         .from('phone_models')
@@ -228,7 +228,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const deletePhoneModel = async (id: string) => {
+  const deletePhoneModel = async (id: number) => {
     try {
       const { error } = await supabase
         .from('phone_models')
@@ -262,7 +262,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data && data[0]) {
         const newServiceType: ServiceType = {
-          id: data[0].id.toString(),
+          id: data[0].id,
           name: data[0].name
         };
         setServiceTypes([...serviceTypes, newServiceType]);
@@ -274,7 +274,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateServiceType = async (id: string, name: string) => {
+  const updateServiceType = async (id: number, name: string) => {
     try {
       const { error } = await supabase
         .from('service_types')
@@ -297,7 +297,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const deleteServiceType = async (id: string) => {
+  const deleteServiceType = async (id: number) => {
     try {
       const { error } = await supabase
         .from('service_types')

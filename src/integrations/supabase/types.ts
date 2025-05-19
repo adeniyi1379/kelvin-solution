@@ -24,21 +24,138 @@ export type Database = {
         }
         Relationships: []
       }
+      phones_597p9_models: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          price: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name: string
+          price?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name?: string
+          price?: number | null
+        }
+        Relationships: []
+      }
+      phones_597p9_services: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          price: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name: string
+          price?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name?: string
+          price?: number | null
+        }
+        Relationships: []
+      }
+      phones_597p9_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: number
+          paid: boolean | null
+          phone_id: number | null
+          service_id: number | null
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: number
+          paid?: boolean | null
+          phone_id?: number | null
+          service_id?: number | null
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: number
+          paid?: boolean | null
+          phone_id?: number | null
+          service_id?: number | null
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phones_597p9_transactions_phone_id_fkey"
+            columns: ["phone_id"]
+            isOneToOne: false
+            referencedRelation: "phones_597p9_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phones_597p9_transactions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "phones_597p9_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phones_597p9_user_roles: {
+        Row: {
+          created_at: string
+          is_admin: boolean | null
+          user_email: string
+        }
+        Insert: {
+          created_at?: string
+          is_admin?: boolean | null
+          user_email: string
+        }
+        Update: {
+          created_at?: string
+          is_admin?: boolean | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           id: number
           role: string | null
-          username: string | null
+          username: string
         }
         Insert: {
           id?: number
           role?: string | null
-          username?: string | null
+          username: string
         }
         Update: {
           id?: number
           role?: string | null
-          username?: string | null
+          username?: string
         }
         Relationships: []
       }

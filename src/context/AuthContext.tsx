@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface User {
-  id: string;
+  id: number;
   username: string;
   role: 'user' | 'admin';
   email?: string;
@@ -51,12 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: userProfile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', parseInt(session.user.id))
           .single();
 
         if (userProfile) {
           setCurrentUser({
-            id: userProfile.id.toString(),
+            id: userProfile.id,
             username: userProfile.username || session.user.email || '',
             role: (userProfile.role as 'user' | 'admin') || 'user',
             email: session.user.email
@@ -77,12 +77,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const { data: userProfile } = await supabase
               .from('profiles')
               .select('*')
-              .eq('id', session.user.id)
+              .eq('id', parseInt(session.user.id))
               .single();
 
             if (userProfile) {
               setCurrentUser({
-                id: userProfile.id.toString(),
+                id: userProfile.id,
                 username: userProfile.username || session.user.email || '',
                 role: (userProfile.role as 'user' | 'admin') || 'user',
                 email: session.user.email
@@ -128,12 +128,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: userProfile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', data.user.id)
+          .eq('id', parseInt(data.user.id))
           .single();
 
         if (userProfile) {
           setCurrentUser({
-            id: userProfile.id.toString(),
+            id: userProfile.id,
             username: userProfile.username || data.user.email || '',
             role: (userProfile.role as 'user' | 'admin') || 'user',
             email: data.user.email
