@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +11,7 @@ export interface Transaction {
   isPaid: boolean;
   description: string;
   date: string;
-  user_id?: string;
+  user_id?: number;
 }
 
 export interface PhoneModel {
@@ -67,10 +66,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phoneName: item.phoneName,
             serviceType: item.serviceType,
             amount: Number(item.amount),
-            isPaid: item.isPaid === 'true' || item.isPaid === true,
+            isPaid: item.isPaid === true || item.isPaid === 'true',
             description: item.description,
             date: item.date,
-            user_id: currentUser?.id.toString()
+            user_id: currentUser?.id
           }));
           setTransactions(formattedTransactions);
         }
@@ -120,9 +119,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const newTransaction = {
       ...transaction,
-      isPaid: String(transaction.isPaid), // Convert boolean to string for the database
+      isPaid: transaction.isPaid, // Keep boolean value
       date: new Date().toISOString(),
-      user_id: currentUser.id.toString()
+      user_id: currentUser.id
     };
     
     try {
@@ -142,10 +141,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phoneName: data[0].phoneName,
           serviceType: data[0].serviceType,
           amount: Number(data[0].amount),
-          isPaid: data[0].isPaid === 'true' || data[0].isPaid === true,
+          isPaid: data[0].isPaid === true || data[0].isPaid === 'true',
           description: data[0].description,
           date: data[0].date,
-          user_id: currentUser.id.toString()
+          user_id: currentUser.id
         };
         setTransactions([...transactions, formattedTransaction]);
         toast.success('Transaction added successfully');
@@ -160,7 +159,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase
         .from('transactions')
-        .update({ isPaid: String(isPaid) }) // Convert boolean to string
+        .update({ isPaid: isPaid }) // Keep boolean value
         .eq('id', id);
 
       if (error) {

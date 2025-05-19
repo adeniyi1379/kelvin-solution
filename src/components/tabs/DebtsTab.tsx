@@ -18,7 +18,7 @@ const DebtsTab = () => {
     0
   );
 
-  const handleMarkAsPaid = (id: string) => {
+  const handleMarkAsPaid = (id: number) => {
     updateTransactionStatus(id, true);
   };
 

@@ -37,7 +37,7 @@ const AdminTab = () => {
 const PhoneModelsSection = () => {
   const { phoneModels, addPhoneModel, updatePhoneModel, deletePhoneModel } = useData();
   const [newPhoneModel, setNewPhoneModel] = useState('');
-  const [editId, setEditId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -49,7 +49,7 @@ const PhoneModelsSection = () => {
     }
   };
 
-  const handleEditStart = (id: string, name: string) => {
+  const handleEditStart = (id: number, name: string) => {
     setEditId(id);
     setEditName(name);
     setIsEditDialogOpen(true);
@@ -147,7 +147,7 @@ const PhoneModelsSection = () => {
 const ServiceTypesSection = () => {
   const { serviceTypes, addServiceType, updateServiceType, deleteServiceType } = useData();
   const [newServiceType, setNewServiceType] = useState('');
-  const [editId, setEditId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -159,7 +159,7 @@ const ServiceTypesSection = () => {
     }
   };
 
-  const handleEditStart = (id: string, name: string) => {
+  const handleEditStart = (id: number, name: string) => {
     setEditId(id);
     setEditName(name);
     setIsEditDialogOpen(true);
@@ -272,7 +272,7 @@ const UserManagementSection = () => {
     e.preventDefault();
     if (newUsername.trim() && newEmail.trim()) {
       const newUser: User = {
-        id: Date.now().toString(),
+        id: Date.now(), // Using timestamp as numeric ID
         username: newUsername.trim(),
         email: newEmail.trim(),
         role: newRole
@@ -289,7 +289,7 @@ const UserManagementSection = () => {
     }
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = (id: number) => {
     const updatedUsers = users.filter(user => user.id !== id);
     setUsers(updatedUsers);
     localStorage.setItem('phone_sales_users', JSON.stringify(updatedUsers));
