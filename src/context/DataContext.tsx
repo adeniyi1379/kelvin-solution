@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,10 +67,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phoneName: item.phoneName,
             serviceType: item.serviceType,
             amount: Number(item.amount),
-            // Fix for the comparison issue - convert string representation of boolean to actual boolean
-            isPaid: typeof item.isPaid === 'boolean' 
-              ? item.isPaid 
-              : item.isPaid === 'true' || item.isPaid === true,
+            // Convert string representation of boolean to actual boolean
+            isPaid: item.isPaid === 'true' || item.isPaid === true,
             description: item.description,
             date: item.date,
             user_id: currentUser?.id
@@ -122,7 +121,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const newTransaction = {
       ...transaction,
-      isPaid: Boolean(transaction.isPaid), // Ensure boolean value
+      // Convert boolean to string for database storage
+      isPaid: transaction.isPaid ? 'true' : 'false',
       date: new Date().toISOString(),
       user_id: currentUser.id
     };
@@ -144,9 +144,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phoneName: data[0].phoneName,
           serviceType: data[0].serviceType,
           amount: Number(data[0].amount),
-          isPaid: typeof data[0].isPaid === 'boolean' 
-            ? data[0].isPaid 
-            : data[0].isPaid === 'true' || data[0].isPaid === true,
+          // Convert string back to boolean for application use
+          isPaid: data[0].isPaid === 'true',
           description: data[0].description,
           date: data[0].date,
           user_id: currentUser.id
@@ -162,9 +161,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateTransactionStatus = async (id: number, isPaid: boolean) => {
     try {
+      // Convert boolean to string for database storage
       const { error } = await supabase
         .from('transactions')
-        .update({ isPaid: isPaid.toString() }) // Convert boolean to string for database
+        .update({ isPaid: isPaid ? 'true' : 'false' })
         .eq('id', id);
 
       if (error) {

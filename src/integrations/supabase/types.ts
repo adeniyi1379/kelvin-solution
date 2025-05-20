@@ -180,7 +180,7 @@ export type Database = {
           date: string
           description: string | null
           id: number
-          isPaid: string | null
+          isPaid: boolean | null
           phoneName: string | null
           serviceType: string | null
         }
@@ -189,7 +189,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: number
-          isPaid?: string | null
+          isPaid?: boolean | null
           phoneName?: string | null
           serviceType?: string | null
         }
@@ -198,7 +198,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: number
-          isPaid?: string | null
+          isPaid?: boolean | null
           phoneName?: string | null
           serviceType?: string | null
         }
