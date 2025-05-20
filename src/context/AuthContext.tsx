@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export interface User {
   id: string; // Changed from number to string to match auth.users UUID format
@@ -49,10 +49,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session) {
         try {
+          // Convert the string id to string explicitly to ensure type safety
           const { data: userProfile, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id) // Use string ID directly
+            .eq('id', session.user.id) // Use string id directly
             .single();
 
           if (error) {
@@ -62,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (userProfile) {
             setCurrentUser({
-              id: session.user.id, // Use string ID directly
+              id: session.user.id, // Keep as string
               username: userProfile.username || session.user.email || '',
               role: (userProfile.role as 'user' | 'admin') || 'user',
               email: session.user.email
@@ -87,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const { data: userProfile, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', session.user.id) // Use string ID directly
+                .eq('id', session.user.id) // Use string id directly
                 .single();
 
               if (error) {
@@ -97,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
               if (userProfile) {
                 setCurrentUser({
-                  id: session.user.id, // Use string ID directly
+                  id: session.user.id, // Keep as string
                   username: userProfile.username || session.user.email || '',
                   role: (userProfile.role as 'user' | 'admin') || 'user',
                   email: session.user.email
@@ -147,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data: userProfile, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.user.id) // Use string ID directly
+            .eq('id', data.user.id) // Use string id directly
             .single();
 
           if (error) {
@@ -157,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (userProfile) {
             setCurrentUser({
-              id: data.user.id, // Use string ID directly
+              id: data.user.id, // Keep as string
               username: userProfile.username || data.user.email || '',
               role: (userProfile.role as 'user' | 'admin') || 'user',
               email: data.user.email
