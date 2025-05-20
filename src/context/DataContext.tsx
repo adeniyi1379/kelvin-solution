@@ -122,7 +122,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const newTransaction = {
       ...transaction,
-      isPaid: transaction.isPaid, // Keep boolean value
+      isPaid: Boolean(transaction.isPaid), // Ensure boolean value
       date: new Date().toISOString(),
       user_id: currentUser.id
     };
@@ -144,7 +144,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phoneName: data[0].phoneName,
           serviceType: data[0].serviceType,
           amount: Number(data[0].amount),
-          isPaid: data[0].isPaid === true || data[0].isPaid === 'true',
+          isPaid: typeof data[0].isPaid === 'boolean' 
+            ? data[0].isPaid 
+            : data[0].isPaid === 'true' || data[0].isPaid === true,
           description: data[0].description,
           date: data[0].date,
           user_id: currentUser.id
@@ -162,7 +164,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase
         .from('transactions')
-        .update({ isPaid: isPaid }) // Keep boolean value
+        .update({ isPaid: isPaid.toString() }) // Convert boolean to string for database
         .eq('id', id);
 
       if (error) {
