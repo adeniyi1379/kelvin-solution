@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,9 +66,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phoneName: item.phoneName,
             serviceType: item.serviceType,
             amount: Number(item.amount),
-            // Fix for the comparison issue - convert any string representation of boolean to actual boolean
-            isPaid: typeof item.isPaid === 'boolean' ? item.isPaid : 
-                   item.isPaid === 'true' || item.isPaid === true,
+            // Fix for the comparison issue - convert string representation of boolean to actual boolean
+            isPaid: typeof item.isPaid === 'boolean' 
+              ? item.isPaid 
+              : item.isPaid === 'true' || item.isPaid === true,
             description: item.description,
             date: item.date,
             user_id: currentUser?.id
