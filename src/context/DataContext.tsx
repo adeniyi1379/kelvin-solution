@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
 
 interface Transaction {
   id: number;
@@ -12,7 +11,6 @@ interface Transaction {
   isPaid: boolean;
   description: string;
   date: string;
-  user_id?: string; // Changed to string to match Supabase UUID format
 }
 
 interface Phone {
@@ -33,7 +31,6 @@ interface DataContextType {
   transactions: Transaction[];
   phones: Phone[];
   services: Service[];
-  // Added these missing properties for AdminTab.tsx
   phoneModels: { id: number; name: string }[];
   serviceTypes: { id: number; name: string }[];
   addPhoneModel: (name: string) => Promise<boolean>;
@@ -42,7 +39,6 @@ interface DataContextType {
   addServiceType: (name: string) => Promise<boolean>;
   updateServiceType: (id: number, name: string) => Promise<boolean>;
   deleteServiceType: (id: number) => Promise<boolean>;
-  // Original properties
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
   updateTransactionStatus: (id: number, isPaid: boolean) => Promise<boolean>;
   getPhones: () => Promise<void>;
@@ -54,7 +50,6 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser, isAuthenticated } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [phones, setPhones] = useState<Phone[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -64,18 +59,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && currentUser) {
-      fetchTransactions();
-      getPhones();
-      getServices();
-      fetchPhoneModels();
-      fetchServiceTypes();
-    }
-  }, [isAuthenticated, currentUser]);
+    fetchTransactions();
+    getPhones();
+    getServices();
+    fetchPhoneModels();
+    fetchServiceTypes();
+  }, []);
 
   const fetchTransactions = async () => {
-    if (!currentUser) return;
-    
     setLoading(true);
     setError(null);
     
@@ -100,8 +91,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Convert to boolean
           isPaid: typeof item.isPaid === 'string' ? item.isPaid === 'true' : Boolean(item.isPaid),
           description: item.description,
-          date: item.date,
-          user_id: currentUser?.id
+          date: item.date
         }));
         
         setTransactions(formattedData);
@@ -210,6 +200,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       fetchPhoneModels(); // Refresh the list
+      getPhones(); // Also refresh the full phone list
       toast.success('Phone model added successfully');
       return true;
     } catch (err) {
@@ -232,6 +223,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       fetchPhoneModels(); // Refresh the list
+      getPhones(); // Also refresh the full phone list
       toast.success('Phone model updated successfully');
       return true;
     } catch (err) {
@@ -254,6 +246,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       fetchPhoneModels(); // Refresh the list
+      getPhones(); // Also refresh the full phone list
       toast.success('Phone model deleted successfully');
       return true;
     } catch (err) {
@@ -276,6 +269,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       fetchServiceTypes(); // Refresh the list
+      getServices(); // Also refresh the full services list
       toast.success('Service type added successfully');
       return true;
     } catch (err) {
@@ -298,6 +292,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       fetchServiceTypes(); // Refresh the list
+      getServices(); // Also refresh the full services list
       toast.success('Service type updated successfully');
       return true;
     } catch (err) {
@@ -320,6 +315,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       fetchServiceTypes(); // Refresh the list
+      getServices(); // Also refresh the full services list
       toast.success('Service type deleted successfully');
       return true;
     } catch (err) {
@@ -330,8 +326,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'date'>): Promise<boolean> => {
-    if (!currentUser) return false;
-    
     setLoading(true);
     
     try {
@@ -341,8 +335,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         amount: transaction.amount,
         isPaid: transaction.isPaid, // Boolean value
         description: transaction.description,
-        date: new Date().toISOString(),
-        user_id: currentUser.id
+        date: new Date().toISOString()
       };
       
       const { data, error } = await supabase
@@ -364,8 +357,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           amount: Number(data[0].amount),
           isPaid: typeof data[0].isPaid === 'string' ? data[0].isPaid === 'true' : Boolean(data[0].isPaid),
           description: data[0].description,
-          date: data[0].date,
-          user_id: currentUser.id
+          date: data[0].date
         };
         
         setTransactions([newTrans, ...transactions]);
