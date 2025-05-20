@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,6 +149,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch phone models for admin tab
   const fetchPhoneModels = async () => {
     try {
+      console.log('Fetching phone models...');
       const { data, error } = await supabase
         .from('phones_597p9_models')
         .select('id, name')
@@ -161,6 +161,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data) {
+        console.log('Phone models fetched:', data);
         setPhoneModels(data);
       }
     } catch (err) {
@@ -171,6 +172,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch service types for admin tab
   const fetchServiceTypes = async () => {
     try {
+      console.log('Fetching service types...');
       const { data, error } = await supabase
         .from('phones_597p9_services')
         .select('id, name')
@@ -182,6 +184,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data) {
+        console.log('Service types fetched:', data);
         setServiceTypes(data);
       }
     } catch (err) {
@@ -192,35 +195,53 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Admin functions for phone models
   const addPhoneModel = async (name: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('phones_597p9_models')
-        .insert({ name });
-        
-      if (error) {
-        toast.error('Failed to add phone model');
+      console.log('Adding phone model:', name);
+      
+      if (!name.trim()) {
+        toast.error('Phone model name cannot be empty');
         return false;
       }
       
+      const { data, error } = await supabase
+        .from('phones_597p9_models')
+        .insert([{ name }])
+        .select();
+        
+      if (error) {
+        console.error('Error adding phone model:', error);
+        toast.error('Failed to add phone model: ' + error.message);
+        return false;
+      }
+      
+      console.log('Phone model added successfully:', data);
       fetchPhoneModels(); // Refresh the list
       getPhones(); // Also refresh the full phone list
       toast.success('Phone model added successfully');
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding phone model:', err);
-      toast.error('An error occurred while adding the phone model');
+      toast.error('An error occurred while adding the phone model: ' + err.message);
       return false;
     }
   };
 
   const updatePhoneModel = async (id: number, name: string): Promise<boolean> => {
     try {
+      console.log('Updating phone model:', id, name);
+      
+      if (!name.trim()) {
+        toast.error('Phone model name cannot be empty');
+        return false;
+      }
+      
       const { error } = await supabase
         .from('phones_597p9_models')
         .update({ name })
         .eq('id', id);
 
       if (error) {
-        toast.error('Failed to update phone model');
+        console.error('Error updating phone model:', error);
+        toast.error('Failed to update phone model: ' + error.message);
         return false;
       }
 
@@ -228,22 +249,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getPhones(); // Also refresh the full phone list
       toast.success('Phone model updated successfully');
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating phone model:', err);
-      toast.error('An error occurred while updating the phone model');
+      toast.error('An error occurred while updating the phone model: ' + err.message);
       return false;
     }
   };
 
   const deletePhoneModel = async (id: number): Promise<boolean> => {
     try {
+      console.log('Deleting phone model:', id);
       const { error } = await supabase
         .from('phones_597p9_models')
         .delete()
         .eq('id', id);
 
       if (error) {
-        toast.error('Failed to delete phone model');
+        console.error('Error deleting phone model:', error);
+        toast.error('Failed to delete phone model: ' + error.message);
         return false;
       }
 
@@ -251,9 +274,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getPhones(); // Also refresh the full phone list
       toast.success('Phone model deleted successfully');
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting phone model:', err);
-      toast.error('An error occurred while deleting the phone model');
+      toast.error('An error occurred while deleting the phone model: ' + err.message);
       return false;
     }
   };
@@ -261,35 +284,53 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Admin functions for service types
   const addServiceType = async (name: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('phones_597p9_services')
-        .insert({ name });
-        
-      if (error) {
-        toast.error('Failed to add service type');
+      console.log('Adding service type:', name);
+      
+      if (!name.trim()) {
+        toast.error('Service type name cannot be empty');
         return false;
       }
       
+      const { data, error } = await supabase
+        .from('phones_597p9_services')
+        .insert([{ name }])
+        .select();
+        
+      if (error) {
+        console.error('Error adding service type:', error);
+        toast.error('Failed to add service type: ' + error.message);
+        return false;
+      }
+      
+      console.log('Service type added successfully:', data);
       fetchServiceTypes(); // Refresh the list
       getServices(); // Also refresh the full services list
       toast.success('Service type added successfully');
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding service type:', err);
-      toast.error('An error occurred while adding the service type');
+      toast.error('An error occurred while adding the service type: ' + err.message);
       return false;
     }
   };
 
   const updateServiceType = async (id: number, name: string): Promise<boolean> => {
     try {
+      console.log('Updating service type:', id, name);
+      
+      if (!name.trim()) {
+        toast.error('Service type name cannot be empty');
+        return false;
+      }
+      
       const { error } = await supabase
         .from('phones_597p9_services')
         .update({ name })
         .eq('id', id);
 
       if (error) {
-        toast.error('Failed to update service type');
+        console.error('Error updating service type:', error);
+        toast.error('Failed to update service type: ' + error.message);
         return false;
       }
 
@@ -297,22 +338,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getServices(); // Also refresh the full services list
       toast.success('Service type updated successfully');
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating service type:', err);
-      toast.error('An error occurred while updating the service type');
+      toast.error('An error occurred while updating the service type: ' + err.message);
       return false;
     }
   };
 
   const deleteServiceType = async (id: number): Promise<boolean> => {
     try {
+      console.log('Deleting service type:', id);
       const { error } = await supabase
         .from('phones_597p9_services')
         .delete()
         .eq('id', id);
 
       if (error) {
-        toast.error('Failed to delete service type');
+        console.error('Error deleting service type:', error);
+        toast.error('Failed to delete service type: ' + error.message);
         return false;
       }
 
@@ -320,9 +363,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getServices(); // Also refresh the full services list
       toast.success('Service type deleted successfully');
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting service type:', err);
-      toast.error('An error occurred while deleting the service type');
+      toast.error('An error occurred while deleting the service type: ' + err.message);
       return false;
     }
   };

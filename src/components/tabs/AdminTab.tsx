@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '@/context/DataContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { User } from '@/context/AuthContext';
 
 const AdminTab = () => {
@@ -40,12 +40,23 @@ const PhoneModelsSection = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAddPhoneModel = (e: React.FormEvent) => {
+  const handleAddPhoneModel = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPhoneModel.trim()) {
-      addPhoneModel(newPhoneModel.trim());
-      setNewPhoneModel('');
+    if (!newPhoneModel.trim()) {
+      toast.error('Phone model name is required');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const success = await addPhoneModel(newPhoneModel.trim());
+      if (success) {
+        setNewPhoneModel('');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -55,10 +66,28 @@ const PhoneModelsSection = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleEditSave = () => {
-    if (editId && editName.trim()) {
-      updatePhoneModel(editId, editName.trim());
-      setIsEditDialogOpen(false);
+  const handleEditSave = async () => {
+    if (!editName.trim()) {
+      toast.error('Phone model name is required');
+      return;
+    }
+    
+    if (editId !== null) {
+      setIsSubmitting(true);
+      try {
+        const success = await updatePhoneModel(editId, editName.trim());
+        if (success) {
+          setIsEditDialogOpen(false);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleDeletePhoneModel = async (id: number) => {
+    if (confirm('Are you sure you want to delete this phone model?')) {
+      await deletePhoneModel(id);
     }
   };
 
@@ -76,7 +105,9 @@ const PhoneModelsSection = () => {
             onChange={(e) => setNewPhoneModel(e.target.value)}
             className="flex-1"
           />
-          <Button type="submit">Add Phone Model</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Adding...' : 'Add Phone Model'}
+          </Button>
         </form>
 
         <div className="rounded-md border">
@@ -103,7 +134,7 @@ const PhoneModelsSection = () => {
                       <Button 
                         variant="destructive" 
                         size="sm" 
-                        onClick={() => deletePhoneModel(model.id)}
+                        onClick={() => handleDeletePhoneModel(model.id)}
                       >
                         Delete
                       </Button>
@@ -135,7 +166,9 @@ const PhoneModelsSection = () => {
                   onChange={(e) => setEditName(e.target.value)}
                 />
               </div>
-              <Button onClick={handleEditSave} className="w-full">Save Changes</Button>
+              <Button onClick={handleEditSave} disabled={isSubmitting} className="w-full">
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -150,12 +183,23 @@ const ServiceTypesSection = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAddServiceType = (e: React.FormEvent) => {
+  const handleAddServiceType = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newServiceType.trim()) {
-      addServiceType(newServiceType.trim());
-      setNewServiceType('');
+    if (!newServiceType.trim()) {
+      toast.error('Service type name is required');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const success = await addServiceType(newServiceType.trim());
+      if (success) {
+        setNewServiceType('');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -165,10 +209,28 @@ const ServiceTypesSection = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleEditSave = () => {
-    if (editId && editName.trim()) {
-      updateServiceType(editId, editName.trim());
-      setIsEditDialogOpen(false);
+  const handleEditSave = async () => {
+    if (!editName.trim()) {
+      toast.error('Service type name is required');
+      return;
+    }
+    
+    if (editId !== null) {
+      setIsSubmitting(true);
+      try {
+        const success = await updateServiceType(editId, editName.trim());
+        if (success) {
+          setIsEditDialogOpen(false);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleDeleteServiceType = async (id: number) => {
+    if (confirm('Are you sure you want to delete this service type?')) {
+      await deleteServiceType(id);
     }
   };
 
@@ -186,7 +248,9 @@ const ServiceTypesSection = () => {
             onChange={(e) => setNewServiceType(e.target.value)}
             className="flex-1"
           />
-          <Button type="submit">Add Service Type</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Adding...' : 'Add Service Type'}
+          </Button>
         </form>
 
         <div className="rounded-md border">
@@ -213,7 +277,7 @@ const ServiceTypesSection = () => {
                       <Button 
                         variant="destructive" 
                         size="sm" 
-                        onClick={() => deleteServiceType(service.id)}
+                        onClick={() => handleDeleteServiceType(service.id)}
                       >
                         Delete
                       </Button>
@@ -245,7 +309,9 @@ const ServiceTypesSection = () => {
                   onChange={(e) => setEditName(e.target.value)}
                 />
               </div>
-              <Button onClick={handleEditSave} className="w-full">Save Changes</Button>
+              <Button onClick={handleEditSave} disabled={isSubmitting} className="w-full">
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
