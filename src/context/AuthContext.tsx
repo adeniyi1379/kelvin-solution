@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface User {
-  id: number;
+  id: string; // Changed from number to string to match auth.users UUID format
   username: string;
   role: 'user' | 'admin';
   email?: string;
@@ -48,20 +48,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          const { data: userProfile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id) // Use string ID directly
+            .single();
 
-        if (userProfile) {
-          setCurrentUser({
-            id: parseInt(userProfile.id),
-            username: userProfile.username || session.user.email || '',
-            role: (userProfile.role as 'user' | 'admin') || 'user',
-            email: session.user.email
-          });
-          setIsAuthenticated(true);
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            return;
+          }
+
+          if (userProfile) {
+            setCurrentUser({
+              id: session.user.id, // Use string ID directly
+              username: userProfile.username || session.user.email || '',
+              role: (userProfile.role as 'user' | 'admin') || 'user',
+              email: session.user.email
+            });
+            setIsAuthenticated(true);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user profile:', error);
         }
       }
     };
@@ -74,20 +83,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session) {
           // Defer data fetching to prevent deadlocks
           setTimeout(async () => {
-            const { data: userProfile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+            try {
+              const { data: userProfile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id) // Use string ID directly
+                .single();
 
-            if (userProfile) {
-              setCurrentUser({
-                id: parseInt(userProfile.id),
-                username: userProfile.username || session.user.email || '',
-                role: (userProfile.role as 'user' | 'admin') || 'user',
-                email: session.user.email
-              });
-              setIsAuthenticated(true);
+              if (error) {
+                console.error('Error fetching user profile:', error);
+                return;
+              }
+
+              if (userProfile) {
+                setCurrentUser({
+                  id: session.user.id, // Use string ID directly
+                  username: userProfile.username || session.user.email || '',
+                  role: (userProfile.role as 'user' | 'admin') || 'user',
+                  email: session.user.email
+                });
+                setIsAuthenticated(true);
+              }
+            } catch (error) {
+              console.error('Failed to fetch user profile:', error);
             }
           }, 0);
         } else if (event === 'SIGNED_OUT') {
@@ -125,25 +143,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        try {
+          const { data: userProfile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id) // Use string ID directly
+            .single();
 
-        if (userProfile) {
-          setCurrentUser({
-            id: parseInt(userProfile.id),
-            username: userProfile.username || data.user.email || '',
-            role: (userProfile.role as 'user' | 'admin') || 'user',
-            email: data.user.email
-          });
-          setIsAuthenticated(true);
-          toast.success('Login successful!');
-          
-          // Force page reload for a clean state
-          window.location.href = '/';
-          return true;
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            return false;
+          }
+
+          if (userProfile) {
+            setCurrentUser({
+              id: data.user.id, // Use string ID directly
+              username: userProfile.username || data.user.email || '',
+              role: (userProfile.role as 'user' | 'admin') || 'user',
+              email: data.user.email
+            });
+            setIsAuthenticated(true);
+            toast.success('Login successful!');
+            
+            // Force page reload for a clean state
+            window.location.href = '/';
+            return true;
+          }
+        } catch (error) {
+          console.error('Failed to fetch user profile:', error);
+          return false;
         }
       }
 

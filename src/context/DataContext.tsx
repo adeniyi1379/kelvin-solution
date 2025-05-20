@@ -1,9 +1,10 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 
-export interface Transaction {
+interface Transaction {
   id: number;
   phoneName: string;
   serviceType: string;
@@ -11,136 +12,150 @@ export interface Transaction {
   isPaid: boolean;
   description: string;
   date: string;
-  user_id?: number;
-}
-
-export interface PhoneModel {
-  id: number;
-  name: string;
-}
-
-export interface ServiceType {
-  id: number;
-  name: string;
+  user_id?: string; // Changed from number to string
 }
 
 interface DataContextType {
   transactions: Transaction[];
-  phoneModels: PhoneModel[];
-  serviceTypes: ServiceType[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'date' | 'user_id'>) => void;
-  updateTransactionStatus: (id: number, isPaid: boolean) => void;
-  addPhoneModel: (name: string) => void;
-  updatePhoneModel: (id: number, name: string) => void;
-  deletePhoneModel: (id: number) => void;
-  addServiceType: (name: string) => void;
-  updateServiceType: (id: number, name: string) => void;
-  deleteServiceType: (id: number) => void;
+  phones: { id: number; name: string; price: number | null; description: string | null }[];
+  services: { id: number; name: string; price: number | null; description: string | null }[];
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
+  updateTransactionStatus: (id: number, isPaid: boolean) => Promise<boolean>;
+  getPhones: () => Promise<void>;
+  getServices: () => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
-export const DataContext = createContext<DataContextType | undefined>(undefined);
+const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [phoneModels, setPhoneModels] = useState<PhoneModel[]>([]);
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const { currentUser, isAuthenticated } = useAuth();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [phones, setPhones] = useState<{ id: number; name: string; price: number | null; description: string | null }[]>([]);
+  const [services, setServices] = useState<{ id: number; name: string; price: number | null; description: string | null }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load data when user is authenticated
   useEffect(() => {
-    if (!isAuthenticated || !currentUser) return;
-
-    const fetchData = async () => {
-      try {
-        // Fetch transactions
-        const { data: transactionData, error: transactionError } = await supabase
-          .from('transactions')
-          .select('*');
-
-        if (transactionError) {
-          toast.error(`Error loading transactions: ${transactionError.message}`);
-        } else if (transactionData) {
-          // Convert the data to match our Transaction interface
-          const formattedTransactions: Transaction[] = transactionData.map((item: any) => ({
-            id: item.id,
-            phoneName: item.phoneName,
-            serviceType: item.serviceType,
-            amount: Number(item.amount),
-            // Convert to boolean
-            isPaid: typeof item.isPaid === 'string' ? item.isPaid === 'true' : Boolean(item.isPaid),
-            description: item.description,
-            date: item.date,
-            user_id: currentUser?.id
-          }));
-          setTransactions(formattedTransactions);
-        }
-
-        // Fetch phone models
-        const { data: phoneData, error: phoneError } = await supabase
-          .from('phone_models')
-          .select('*');
-
-        if (phoneError) {
-          toast.error(`Error loading phone models: ${phoneError.message}`);
-        } else if (phoneData) {
-          // Convert the data to match our PhoneModel interface
-          const formattedPhoneModels: PhoneModel[] = phoneData.map((item: any) => ({
-            id: item.id,
-            name: item.name
-          }));
-          setPhoneModels(formattedPhoneModels);
-        }
-
-        // Fetch service types
-        const { data: serviceData, error: serviceError } = await supabase
-          .from('service_types')
-          .select('*');
-
-        if (serviceError) {
-          toast.error(`Error loading service types: ${serviceError.message}`);
-        } else if (serviceData) {
-          // Convert the data to match our ServiceType interface
-          const formattedServiceTypes: ServiceType[] = serviceData.map((item: any) => ({
-            id: item.id,
-            name: item.name
-          }));
-          setServiceTypes(formattedServiceTypes);
-        }
-      } catch (error) {
-        toast.error('Failed to fetch data');
-        console.error(error);
-      }
-    };
-
-    fetchData();
+    if (isAuthenticated && currentUser) {
+      fetchTransactions();
+      getPhones();
+      getServices();
+    }
   }, [isAuthenticated, currentUser]);
 
-  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'date' | 'user_id'>) => {
+  const fetchTransactions = async () => {
     if (!currentUser) return;
-
-    const newTransaction = {
-      phoneName: transaction.phoneName,
-      serviceType: transaction.serviceType,
-      amount: transaction.amount,
-      isPaid: transaction.isPaid, // Boolean value
-      description: transaction.description,
-      date: new Date().toISOString(),
-      user_id: currentUser.id
-    };
+    
+    setLoading(true);
+    setError(null);
     
     try {
       const { data, error } = await supabase
         .from('transactions')
-        .insert(newTransaction)
-        .select();
-
+        .select('*')
+        .order('date', { ascending: false });
+        
       if (error) {
-        toast.error(`Failed to add transaction: ${error.message}`);
+        setError(error.message);
+        toast.error('Failed to fetch transactions');
         return;
       }
       
-      if (data && data[0]) {
-        const formattedTransaction: Transaction = {
+      if (data) {
+        const formattedData = data.map(item => ({
+          id: item.id,
+          phoneName: item.phoneName,
+          serviceType: item.serviceType,
+          amount: Number(item.amount),
+          // Convert to boolean
+          isPaid: typeof item.isPaid === 'string' ? item.isPaid === 'true' : Boolean(item.isPaid),
+          description: item.description,
+          date: item.date,
+          user_id: currentUser?.id
+        }));
+        
+        setTransactions(formattedData);
+      }
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+      setError('An unexpected error occurred');
+      toast.error('Failed to fetch transactions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPhones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('phones_597p9_models')
+        .select('*')
+        .order('name', { ascending: true });
+        
+      if (error) {
+        console.error('Error fetching phones:', error);
+        return;
+      }
+      
+      if (data) {
+        setPhones(data);
+      }
+    } catch (err) {
+      console.error('Error fetching phones:', err);
+    }
+  };
+
+  const getServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('phones_597p9_services')
+        .select('*')
+        .order('name', { ascending: true });
+        
+      if (error) {
+        console.error('Error fetching services:', error);
+        return;
+      }
+      
+      if (data) {
+        setServices(data);
+      }
+    } catch (err) {
+      console.error('Error fetching services:', err);
+    }
+  };
+
+  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'date'>): Promise<boolean> => {
+    if (!currentUser) return false;
+    
+    setLoading(true);
+    
+    try {
+      const newTransaction = {
+        phoneName: transaction.phoneName,
+        serviceType: transaction.serviceType,
+        amount: transaction.amount,
+        isPaid: transaction.isPaid, // Boolean value
+        description: transaction.description,
+        date: new Date().toISOString(),
+        user_id: currentUser.id
+      };
+      
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(newTransaction)
+        .select();
+        
+      if (error) {
+        toast.error('Failed to add transaction');
+        return false;
+      }
+      
+      if (data && data.length > 0) {
+        // Map the returned data to our Transaction interface
+        const newTrans: Transaction = {
           id: data[0].id,
           phoneName: data[0].phoneName,
           serviceType: data[0].serviceType,
@@ -150,16 +165,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           date: data[0].date,
           user_id: currentUser.id
         };
-        setTransactions([...transactions, formattedTransaction]);
+        
+        setTransactions([newTrans, ...transactions]);
         toast.success('Transaction added successfully');
+        return true;
       }
-    } catch (error) {
-      toast.error('Failed to add transaction');
-      console.error(error);
+      return false;
+    } catch (err) {
+      console.error('Error adding transaction:', err);
+      toast.error('An error occurred while adding the transaction');
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateTransactionStatus = async (id: number, isPaid: boolean) => {
+  const updateTransactionStatus = async (id: number, isPaid: boolean): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('transactions')
@@ -167,174 +188,43 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', id);
 
       if (error) {
-        toast.error(`Failed to update transaction: ${error.message}`);
-        return;
+        toast.error('Failed to update transaction status');
+        return false;
       }
-      
-      const updatedTransactions = transactions.map(transaction => 
-        transaction.id === id ? { ...transaction, isPaid } : transaction
+
+      // Update local state
+      setTransactions(
+        transactions.map(t => 
+          t.id === id ? { ...t, isPaid } : t
+        )
       );
-      setTransactions(updatedTransactions);
+      
       toast.success('Transaction status updated');
-    } catch (error) {
-      toast.error('Failed to update transaction status');
-      console.error(error);
+      return true;
+    } catch (err) {
+      console.error('Error updating transaction status:', err);
+      toast.error('An error occurred while updating the transaction');
+      return false;
     }
   };
 
-  const addPhoneModel = async (name: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('phone_models')
-        .insert({ name })
-        .select();
-
-      if (error) {
-        toast.error(`Failed to add phone model: ${error.message}`);
-        return;
-      }
-      
-      if (data && data[0]) {
-        const newPhoneModel: PhoneModel = {
-          id: data[0].id,
-          name: data[0].name
-        };
-        setPhoneModels([...phoneModels, newPhoneModel]);
-        toast.success('Phone model added');
-      }
-    } catch (error) {
-      toast.error('Failed to add phone model');
-      console.error(error);
-    }
-  };
-
-  const updatePhoneModel = async (id: number, name: string) => {
-    try {
-      const { error } = await supabase
-        .from('phone_models')
-        .update({ name })
-        .eq('id', id);
-
-      if (error) {
-        toast.error(`Failed to update phone model: ${error.message}`);
-        return;
-      }
-      
-      const updatedPhoneModels = phoneModels.map(model => 
-        model.id === id ? { ...model, name } : model
-      );
-      setPhoneModels(updatedPhoneModels);
-      toast.success('Phone model updated');
-    } catch (error) {
-      toast.error('Failed to update phone model');
-      console.error(error);
-    }
-  };
-
-  const deletePhoneModel = async (id: number) => {
-    try {
-      const { error } = await supabase
-        .from('phone_models')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        toast.error(`Failed to delete phone model: ${error.message}`);
-        return;
-      }
-      
-      setPhoneModels(phoneModels.filter(model => model.id !== id));
-      toast.success('Phone model deleted');
-    } catch (error) {
-      toast.error('Failed to delete phone model');
-      console.error(error);
-    }
-  };
-
-  const addServiceType = async (name: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('service_types')
-        .insert({ name })
-        .select();
-
-      if (error) {
-        toast.error(`Failed to add service type: ${error.message}`);
-        return;
-      }
-      
-      if (data && data[0]) {
-        const newServiceType: ServiceType = {
-          id: data[0].id,
-          name: data[0].name
-        };
-        setServiceTypes([...serviceTypes, newServiceType]);
-        toast.success('Service type added');
-      }
-    } catch (error) {
-      toast.error('Failed to add service type');
-      console.error(error);
-    }
-  };
-
-  const updateServiceType = async (id: number, name: string) => {
-    try {
-      const { error } = await supabase
-        .from('service_types')
-        .update({ name })
-        .eq('id', id);
-
-      if (error) {
-        toast.error(`Failed to update service type: ${error.message}`);
-        return;
-      }
-      
-      const updatedServiceTypes = serviceTypes.map(type => 
-        type.id === id ? { ...type, name } : type
-      );
-      setServiceTypes(updatedServiceTypes);
-      toast.success('Service type updated');
-    } catch (error) {
-      toast.error('Failed to update service type');
-      console.error(error);
-    }
-  };
-
-  const deleteServiceType = async (id: number) => {
-    try {
-      const { error } = await supabase
-        .from('service_types')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        toast.error(`Failed to delete service type: ${error.message}`);
-        return;
-      }
-      
-      setServiceTypes(serviceTypes.filter(type => type.id !== id));
-      toast.success('Service type deleted');
-    } catch (error) {
-      toast.error('Failed to delete service type');
-      console.error(error);
-    }
-  };
-
-  const value = {
-    transactions,
-    phoneModels,
-    serviceTypes,
-    addTransaction,
-    updateTransactionStatus,
-    addPhoneModel,
-    updatePhoneModel,
-    deletePhoneModel,
-    addServiceType,
-    updateServiceType,
-    deleteServiceType
-  };
-
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+  return (
+    <DataContext.Provider
+      value={{
+        transactions,
+        phones,
+        services,
+        addTransaction,
+        updateTransactionStatus,
+        getPhones,
+        getServices,
+        loading,
+        error
+      }}
+    >
+      {children}
+    </DataContext.Provider>
+  );
 };
 
 export const useData = () => {
