@@ -7,6 +7,7 @@ interface Transaction {
   id: number;
   phoneName: string;
   serviceType: string;
+  clientName: string;
   amount: number;
   isPaid: boolean;
   description: string;
@@ -87,6 +88,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: item.id,
           phoneName: item.phoneName,
           serviceType: item.serviceType,
+          clientName: item.clientName || '',
           amount: Number(item.amount),
           // Convert to boolean
           isPaid: typeof item.isPaid === 'string' ? item.isPaid === 'true' : Boolean(item.isPaid),
@@ -332,6 +334,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newTransaction = {
         phoneName: transaction.phoneName,
         serviceType: transaction.serviceType,
+        clientName: transaction.clientName,
         amount: transaction.amount,
         isPaid: transaction.isPaid, // Boolean value
         description: transaction.description,
@@ -354,6 +357,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data[0].id,
           phoneName: data[0].phoneName,
           serviceType: data[0].serviceType,
+          clientName: data[0].clientName || '',
           amount: Number(data[0].amount),
           isPaid: typeof data[0].isPaid === 'string' ? data[0].isPaid === 'true' : Boolean(data[0].isPaid),
           description: data[0].description,

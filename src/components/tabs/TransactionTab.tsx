@@ -14,6 +14,7 @@ const TransactionTab = () => {
   
   const [phoneName, setPhoneName] = useState('');
   const [serviceType, setServiceType] = useState('');
+  const [clientName, setClientName] = useState('');
   const [amount, setAmount] = useState('');
   const [isPaid, setIsPaid] = useState(false);
   const [description, setDescription] = useState('');
@@ -24,6 +25,7 @@ const TransactionTab = () => {
     addTransaction({
       phoneName,
       serviceType,
+      clientName,
       amount: parseFloat(amount),
       isPaid,
       description
@@ -32,6 +34,7 @@ const TransactionTab = () => {
     // Clear form
     setPhoneName('');
     setServiceType('');
+    setClientName('');
     setAmount('');
     setIsPaid(false);
     setDescription('');
@@ -84,6 +87,18 @@ const TransactionTab = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="clientName">Client Name</Label>
+              <Input
+                id="clientName"
+                type="text"
+                placeholder="Enter client name"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">

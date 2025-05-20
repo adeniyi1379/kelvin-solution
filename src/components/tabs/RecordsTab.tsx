@@ -15,6 +15,7 @@ const RecordsTab = () => {
     return (
       transaction.phoneName.toLowerCase().includes(searchLower) ||
       transaction.serviceType.toLowerCase().includes(searchLower) ||
+      (transaction.clientName && transaction.clientName.toLowerCase().includes(searchLower)) ||
       transaction.description.toLowerCase().includes(searchLower)
     );
   });
@@ -39,6 +40,7 @@ const RecordsTab = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
+                <TableHead>Client</TableHead>
                 <TableHead>Phone Model</TableHead>
                 <TableHead>Service</TableHead>
                 <TableHead>Amount</TableHead>
@@ -53,6 +55,7 @@ const RecordsTab = () => {
                     <TableCell>
                       {format(new Date(transaction.date), 'MMM dd, yyyy')}
                     </TableCell>
+                    <TableCell>{transaction.clientName || 'N/A'}</TableCell>
                     <TableCell>{transaction.phoneName}</TableCell>
                     <TableCell>{transaction.serviceType}</TableCell>
                     <TableCell>${transaction.amount.toFixed(2)}</TableCell>
@@ -74,7 +77,7 @@ const RecordsTab = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-6 text-gray-500">
                     {searchTerm ? 'No transactions match your search' : 'No transactions recorded yet'}
                   </TableCell>
                 </TableRow>

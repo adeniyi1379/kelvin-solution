@@ -42,6 +42,7 @@ const DebtsTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
+                  <TableHead>Client</TableHead>
                   <TableHead>Phone Model</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Amount</TableHead>
@@ -56,6 +57,7 @@ const DebtsTab = () => {
                       <TableCell>
                         {format(new Date(transaction.date), 'MMM dd, yyyy')}
                       </TableCell>
+                      <TableCell>{transaction.clientName || 'N/A'}</TableCell>
                       <TableCell>{transaction.phoneName}</TableCell>
                       <TableCell>{transaction.serviceType}</TableCell>
                       <TableCell>${transaction.amount.toFixed(2)}</TableCell>
@@ -76,7 +78,7 @@ const DebtsTab = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       No unpaid transactions
                     </TableCell>
                   </TableRow>

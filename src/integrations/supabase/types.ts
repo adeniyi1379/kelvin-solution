@@ -177,6 +177,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number | null
+          clientName: string | null
           date: string
           description: string | null
           id: number
@@ -186,6 +187,7 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          clientName?: string | null
           date?: string
           description?: string | null
           id?: number
@@ -195,6 +197,7 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          clientName?: string | null
           date?: string
           description?: string | null
           id?: number
