@@ -272,7 +272,7 @@ const UserManagementSection = () => {
     e.preventDefault();
     if (newUsername.trim() && newEmail.trim()) {
       const newUser: User = {
-        id: Date.now(), // Using timestamp as numeric ID
+        id: Date.now().toString(), // Using timestamp as string ID for consistency with Auth
         username: newUsername.trim(),
         email: newEmail.trim(),
         role: newRole
@@ -289,7 +289,7 @@ const UserManagementSection = () => {
     }
   };
 
-  const handleDeleteUser = (id: number) => {
+  const handleDeleteUser = (id: string) => { // Updated to use string ID
     const updatedUsers = users.filter(user => user.id !== id);
     setUsers(updatedUsers);
     localStorage.setItem('phone_sales_users', JSON.stringify(updatedUsers));

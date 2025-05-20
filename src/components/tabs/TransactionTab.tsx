@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 
 const TransactionTab = () => {
-  const { phoneModels, serviceTypes, addTransaction } = useData();
+  const { phones, services, addTransaction } = useData();
   
   const [phoneName, setPhoneName] = useState('');
   const [serviceType, setServiceType] = useState('');
@@ -57,7 +57,7 @@ const TransactionTab = () => {
                   <SelectValue placeholder="Select a phone model" />
                 </SelectTrigger>
                 <SelectContent>
-                  {phoneModels.map((model) => (
+                  {phones.map((model) => (
                     <SelectItem key={model.id} value={model.name}>
                       {model.name}
                     </SelectItem>
@@ -77,7 +77,7 @@ const TransactionTab = () => {
                   <SelectValue placeholder="Select a service type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {serviceTypes.map((service) => (
+                  {services.map((service) => (
                     <SelectItem key={service.id} value={service.name}>
                       {service.name}
                     </SelectItem>

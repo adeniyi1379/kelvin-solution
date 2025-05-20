@@ -12,13 +12,37 @@ interface Transaction {
   isPaid: boolean;
   description: string;
   date: string;
-  user_id?: string; // Changed from number to string
+  user_id?: string; // Changed to string to match Supabase UUID format
+}
+
+interface Phone {
+  id: number;
+  name: string;
+  price: number | null;
+  description: string | null;
+}
+
+interface Service {
+  id: number;
+  name: string;
+  price: number | null;
+  description: string | null;
 }
 
 interface DataContextType {
   transactions: Transaction[];
-  phones: { id: number; name: string; price: number | null; description: string | null }[];
-  services: { id: number; name: string; price: number | null; description: string | null }[];
+  phones: Phone[];
+  services: Service[];
+  // Added these missing properties for AdminTab.tsx
+  phoneModels: { id: number; name: string }[];
+  serviceTypes: { id: number; name: string }[];
+  addPhoneModel: (name: string) => Promise<boolean>;
+  updatePhoneModel: (id: number, name: string) => Promise<boolean>;
+  deletePhoneModel: (id: number) => Promise<boolean>;
+  addServiceType: (name: string) => Promise<boolean>;
+  updateServiceType: (id: number, name: string) => Promise<boolean>;
+  deleteServiceType: (id: number) => Promise<boolean>;
+  // Original properties
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => Promise<boolean>;
   updateTransactionStatus: (id: number, isPaid: boolean) => Promise<boolean>;
   getPhones: () => Promise<void>;
@@ -32,8 +56,10 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, isAuthenticated } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [phones, setPhones] = useState<{ id: number; name: string; price: number | null; description: string | null }[]>([]);
-  const [services, setServices] = useState<{ id: number; name: string; price: number | null; description: string | null }[]>([]);
+  const [phones, setPhones] = useState<Phone[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [phoneModels, setPhoneModels] = useState<{ id: number; name: string }[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +68,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fetchTransactions();
       getPhones();
       getServices();
+      fetchPhoneModels();
+      fetchServiceTypes();
     }
   }, [isAuthenticated, currentUser]);
 
@@ -124,6 +152,180 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error('Error fetching services:', err);
+    }
+  };
+
+  // Fetch phone models for admin tab
+  const fetchPhoneModels = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('phones_597p9_models')
+        .select('id, name')
+        .order('name', { ascending: true });
+        
+      if (error) {
+        console.error('Error fetching phone models:', error);
+        return;
+      }
+      
+      if (data) {
+        setPhoneModels(data);
+      }
+    } catch (err) {
+      console.error('Error fetching phone models:', err);
+    }
+  };
+
+  // Fetch service types for admin tab
+  const fetchServiceTypes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('phones_597p9_services')
+        .select('id, name')
+        .order('name', { ascending: true });
+        
+      if (error) {
+        console.error('Error fetching service types:', error);
+        return;
+      }
+      
+      if (data) {
+        setServiceTypes(data);
+      }
+    } catch (err) {
+      console.error('Error fetching service types:', err);
+    }
+  };
+
+  // Admin functions for phone models
+  const addPhoneModel = async (name: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('phones_597p9_models')
+        .insert({ name });
+        
+      if (error) {
+        toast.error('Failed to add phone model');
+        return false;
+      }
+      
+      fetchPhoneModels(); // Refresh the list
+      toast.success('Phone model added successfully');
+      return true;
+    } catch (err) {
+      console.error('Error adding phone model:', err);
+      toast.error('An error occurred while adding the phone model');
+      return false;
+    }
+  };
+
+  const updatePhoneModel = async (id: number, name: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('phones_597p9_models')
+        .update({ name })
+        .eq('id', id);
+
+      if (error) {
+        toast.error('Failed to update phone model');
+        return false;
+      }
+
+      fetchPhoneModels(); // Refresh the list
+      toast.success('Phone model updated successfully');
+      return true;
+    } catch (err) {
+      console.error('Error updating phone model:', err);
+      toast.error('An error occurred while updating the phone model');
+      return false;
+    }
+  };
+
+  const deletePhoneModel = async (id: number): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('phones_597p9_models')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast.error('Failed to delete phone model');
+        return false;
+      }
+
+      fetchPhoneModels(); // Refresh the list
+      toast.success('Phone model deleted successfully');
+      return true;
+    } catch (err) {
+      console.error('Error deleting phone model:', err);
+      toast.error('An error occurred while deleting the phone model');
+      return false;
+    }
+  };
+
+  // Admin functions for service types
+  const addServiceType = async (name: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('phones_597p9_services')
+        .insert({ name });
+        
+      if (error) {
+        toast.error('Failed to add service type');
+        return false;
+      }
+      
+      fetchServiceTypes(); // Refresh the list
+      toast.success('Service type added successfully');
+      return true;
+    } catch (err) {
+      console.error('Error adding service type:', err);
+      toast.error('An error occurred while adding the service type');
+      return false;
+    }
+  };
+
+  const updateServiceType = async (id: number, name: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('phones_597p9_services')
+        .update({ name })
+        .eq('id', id);
+
+      if (error) {
+        toast.error('Failed to update service type');
+        return false;
+      }
+
+      fetchServiceTypes(); // Refresh the list
+      toast.success('Service type updated successfully');
+      return true;
+    } catch (err) {
+      console.error('Error updating service type:', err);
+      toast.error('An error occurred while updating the service type');
+      return false;
+    }
+  };
+
+  const deleteServiceType = async (id: number): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('phones_597p9_services')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast.error('Failed to delete service type');
+        return false;
+      }
+
+      fetchServiceTypes(); // Refresh the list
+      toast.success('Service type deleted successfully');
+      return true;
+    } catch (err) {
+      console.error('Error deleting service type:', err);
+      toast.error('An error occurred while deleting the service type');
+      return false;
     }
   };
 
@@ -214,6 +416,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         transactions,
         phones,
         services,
+        phoneModels,
+        serviceTypes,
+        addPhoneModel,
+        updatePhoneModel,
+        deletePhoneModel,
+        addServiceType,
+        updateServiceType,
+        deleteServiceType,
         addTransaction,
         updateTransactionStatus,
         getPhones,
