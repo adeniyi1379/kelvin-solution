@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,8 +66,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phoneName: item.phoneName,
             serviceType: item.serviceType,
             amount: Number(item.amount),
-            // Convert string or boolean to boolean
-            isPaid: typeof item.isPaid === 'string' ? item.isPaid === 'true' : !!item.isPaid,
+            // Convert to boolean
+            isPaid: typeof item.isPaid === 'string' ? item.isPaid === 'true' : Boolean(item.isPaid),
             description: item.description,
             date: item.date,
             user_id: currentUser?.id
@@ -123,8 +122,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       phoneName: transaction.phoneName,
       serviceType: transaction.serviceType,
       amount: transaction.amount,
-      // Store as boolean in database since that's the expected type
-      isPaid: transaction.isPaid,
+      isPaid: transaction.isPaid, // Boolean value
       description: transaction.description,
       date: new Date().toISOString(),
       user_id: currentUser.id
@@ -147,8 +145,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phoneName: data[0].phoneName,
           serviceType: data[0].serviceType,
           amount: Number(data[0].amount),
-          // Convert any form to boolean
-          isPaid: typeof data[0].isPaid === 'string' ? data[0].isPaid === 'true' : !!data[0].isPaid,
+          isPaid: typeof data[0].isPaid === 'string' ? data[0].isPaid === 'true' : Boolean(data[0].isPaid),
           description: data[0].description,
           date: data[0].date,
           user_id: currentUser.id
@@ -164,10 +161,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateTransactionStatus = async (id: number, isPaid: boolean) => {
     try {
-      // Store as boolean in database since that's the expected type
       const { error } = await supabase
         .from('transactions')
-        .update({ isPaid })
+        .update({ isPaid }) // Boolean value
         .eq('id', id);
 
       if (error) {

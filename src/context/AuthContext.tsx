@@ -51,12 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: userProfile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', parseInt(session.user.id))
+          .eq('id', session.user.id)
           .single();
 
         if (userProfile) {
           setCurrentUser({
-            id: userProfile.id,
+            id: parseInt(userProfile.id),
             username: userProfile.username || session.user.email || '',
             role: (userProfile.role as 'user' | 'admin') || 'user',
             email: session.user.email
@@ -77,12 +77,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const { data: userProfile } = await supabase
               .from('profiles')
               .select('*')
-              .eq('id', parseInt(session.user.id))
+              .eq('id', session.user.id)
               .single();
 
             if (userProfile) {
               setCurrentUser({
-                id: userProfile.id,
+                id: parseInt(userProfile.id),
                 username: userProfile.username || session.user.email || '',
                 role: (userProfile.role as 'user' | 'admin') || 'user',
                 email: session.user.email
@@ -128,12 +128,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: userProfile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', parseInt(data.user.id))
+          .eq('id', data.user.id)
           .single();
 
         if (userProfile) {
           setCurrentUser({
-            id: userProfile.id,
+            id: parseInt(userProfile.id),
             username: userProfile.username || data.user.email || '',
             role: (userProfile.role as 'user' | 'admin') || 'user',
             email: data.user.email
