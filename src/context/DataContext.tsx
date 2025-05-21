@@ -374,12 +374,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     
     try {
+      console.log('Adding transaction:', transaction);
+      
       const newTransaction = {
         phoneName: transaction.phoneName,
         serviceType: transaction.serviceType,
         clientName: transaction.clientName,
         amount: transaction.amount,
-        isPaid: transaction.isPaid, // Boolean value
+        isPaid: transaction.isPaid,
         description: transaction.description,
         date: new Date().toISOString()
       };
@@ -390,9 +392,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select();
         
       if (error) {
-        toast.error('Failed to add transaction');
+        console.error('Error adding transaction:', error);
+        toast.error('Failed to add transaction: ' + error.message);
         return false;
       }
+      
+      console.log('Transaction added successfully:', data);
       
       if (data && data.length > 0) {
         // Map the returned data to our Transaction interface
@@ -408,13 +413,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         
         setTransactions([newTrans, ...transactions]);
-        toast.success('Transaction added successfully');
         return true;
       }
       return false;
     } catch (err) {
       console.error('Error adding transaction:', err);
-      toast.error('An error occurred while adding the transaction');
       return false;
     } finally {
       setLoading(false);

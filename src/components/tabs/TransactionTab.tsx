@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
 
 const TransactionTab = () => {
-  const { phones, services, addTransaction } = useData();
+  const { phones, services, addTransaction, loading } = useData();
   
   const [phoneName, setPhoneName] = useState('');
   const [serviceType, setServiceType] = useState('');
@@ -18,26 +19,53 @@ const TransactionTab = () => {
   const [amount, setAmount] = useState('');
   const [isPaid, setIsPaid] = useState(false);
   const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    addTransaction({
-      phoneName,
-      serviceType,
-      clientName,
-      amount: parseFloat(amount),
-      isPaid,
-      description
-    });
+    // Input validation
+    if (!phoneName || !serviceType || !clientName || !amount) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const amountValue = parseFloat(amount);
+    if (isNaN(amountValue) || amountValue <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    setSubmitting(true);
     
-    // Clear form
-    setPhoneName('');
-    setServiceType('');
-    setClientName('');
-    setAmount('');
-    setIsPaid(false);
-    setDescription('');
+    try {
+      const success = await addTransaction({
+        phoneName,
+        serviceType,
+        clientName,
+        amount: amountValue,
+        isPaid,
+        description
+      });
+      
+      if (success) {
+        toast.success('Transaction added successfully');
+        // Clear form
+        setPhoneName('');
+        setServiceType('');
+        setClientName('');
+        setAmount('');
+        setIsPaid(false);
+        setDescription('');
+      } else {
+        toast.error('Failed to add transaction');
+      }
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+      toast.error('Error adding transaction');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -55,6 +83,7 @@ const TransactionTab = () => {
                 value={phoneName} 
                 onValueChange={setPhoneName}
                 required
+                disabled={submitting || loading}
               >
                 <SelectTrigger id="phoneName">
                   <SelectValue placeholder="Select a phone model" />
@@ -75,6 +104,7 @@ const TransactionTab = () => {
                 value={serviceType} 
                 onValueChange={setServiceType}
                 required
+                disabled={submitting || loading}
               >
                 <SelectTrigger id="serviceType">
                   <SelectValue placeholder="Select a service type" />
@@ -98,6 +128,7 @@ const TransactionTab = () => {
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 required
+                disabled={submitting}
               />
             </div>
 
@@ -112,6 +143,7 @@ const TransactionTab = () => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
+                disabled={submitting}
               />
             </div>
 
@@ -120,6 +152,7 @@ const TransactionTab = () => {
                 id="paid-status"
                 checked={isPaid}
                 onCheckedChange={setIsPaid}
+                disabled={submitting}
               />
               <Label htmlFor="paid-status">
                 Payment Status: <span className={isPaid ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
@@ -137,10 +170,17 @@ const TransactionTab = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
+              disabled={submitting}
             />
           </div>
 
-          <Button type="submit" className="w-full">Save Transaction</Button>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={submitting || loading}
+          >
+            {submitting ? 'Saving...' : 'Save Transaction'}
+          </Button>
         </form>
       </CardContent>
     </Card>

@@ -36,7 +36,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: number
-          name: string
+          name?: string
           price?: number | null
         }
         Update: {
@@ -212,7 +212,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { email: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
