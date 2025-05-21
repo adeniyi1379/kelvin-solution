@@ -12,7 +12,7 @@ const Layout: React.FC = () => {
       <header className="bg-white shadow">
         <div className="container flex justify-between items-center py-4">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-primary">Phone Sales Manager</h1>
+            <h1 className="text-2xl font-bold text-primary">Kelvin's Place Gadget</h1>
           </div>
         </div>
       </header>
