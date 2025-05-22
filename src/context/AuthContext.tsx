@@ -36,10 +36,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (data) {
           setCurrentUser({
-            id: data.id,
+            id: data.id.toString(), // Convert to string if needed
             username: data.username || user.name || user.email,
-            role: data.role || "user",
-            email: data.email,
+            role: data.role === "admin" ? "admin" : "user", // Ensure role is either "admin" or "user"
+            email: user.email,
           });
         } else if (!error) {
           // Optionally, create a new profile if not found
@@ -48,7 +48,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .insert([{ email: user.email, username: user.name || user.email, role: "user" }])
             .select()
             .single();
-          setCurrentUser(newProfile);
+
+          if (newProfile) {
+            setCurrentUser({
+              id: newProfile.id.toString(), // Convert to string if needed
+              username: newProfile.username || user.name || user.email,
+              role: newProfile.role === "admin" ? "admin" : "user", // Ensure role is either "admin" or "user"
+              email: user.email,
+            });
+          }
         }
       } else {
         setCurrentUser(null);
