@@ -58,7 +58,7 @@ const RecordsTab = () => {
                     <TableCell>{transaction.clientName || 'N/A'}</TableCell>
                     <TableCell>{transaction.phoneName}</TableCell>
                     <TableCell>{transaction.serviceType}</TableCell>
-                    <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                    <TableCell>#{transaction.amount.toFixed(2)}</TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${

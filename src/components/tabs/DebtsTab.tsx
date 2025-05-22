@@ -27,7 +27,7 @@ const DebtsTab = () => {
       <div className="mb-6">
         <div className="bg-white rounded-lg border p-6 shadow-sm">
           <h3 className="text-lg font-medium mb-2">Total Outstanding Debt</h3>
-          <p className="text-3xl font-bold text-red-600">${totalDebt.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-red-600">#{totalDebt.toFixed(2)}</p>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ const DebtsTab = () => {
                       <TableCell>{transaction.clientName || 'N/A'}</TableCell>
                       <TableCell>{transaction.phoneName}</TableCell>
                       <TableCell>{transaction.serviceType}</TableCell>
-                      <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                      <TableCell>#{transaction.amount.toFixed(2)}</TableCell>
                       <TableCell className="max-w-xs truncate" title={transaction.description}>
                         {transaction.description}
                       </TableCell>
