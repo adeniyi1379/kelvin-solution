@@ -1,7 +1,8 @@
+
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
   id: string;
