@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { User } from '@/context/AuthContext';
+import { UserProfile } from '@/context/AuthContext';
 
 const AdminTab = () => {
   return (
@@ -321,7 +321,7 @@ const ServiceTypesSection = () => {
 };
 
 const UserManagementSection = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState<'user' | 'admin'>('user');
@@ -337,7 +337,7 @@ const UserManagementSection = () => {
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUsername.trim() && newEmail.trim()) {
-      const newUser: User = {
+      const newUser: UserProfile = {
         id: Date.now().toString(), // Using timestamp as string ID for consistency with Auth
         username: newUsername.trim(),
         email: newEmail.trim(),
