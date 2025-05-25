@@ -14,7 +14,8 @@ const Layout: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <h2 className="mb-4 text-xl font-bold">Please log in to access the app.</h2>
+        <img src="IMG_5261.PNG" alt="Logo" className="h-40 w-auto" />
+        
         <button
           className="px-4 py-2 bg-red-600 text-white rounded"
           onClick={() => loginWithRedirect()}
