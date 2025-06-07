@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DashboardAnalytics from './tabs/DashboardAnalytics';
 import TransactionTab from './tabs/TransactionTab';
 import RecordsTab from './tabs/RecordsTab';
 import DebtsTab from './tabs/DebtsTab';
@@ -47,10 +48,11 @@ const Layout: React.FC = () => {
 
       <main className="container py-6">
         <Tabs defaultValue="transaction" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="transaction">Transaction</TabsTrigger>
             <TabsTrigger value="records">Records</TabsTrigger>
             <TabsTrigger value="debts">Debts</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="admin">Admin</TabsTrigger>
           </TabsList>
           <TabsContent value="transaction">
@@ -61,6 +63,9 @@ const Layout: React.FC = () => {
           </TabsContent>
           <TabsContent value="debts">
             <DebtsTab />
+          </TabsContent>
+          <TabsContent value="dashboard">
+            <DashboardAnalytics />
           </TabsContent>
           <TabsContent value="admin">
             <AdminTab />
