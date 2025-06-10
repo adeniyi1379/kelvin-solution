@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Try multiple ways to extract the role
       let userRole = 'user'; // default role
       
-      // Method 1: Check custom claim
+      // Method 1: Check custom claim (namespace format)
       if (user['https://your-app.com/role']) {
         userRole = user['https://your-app.com/role'];
       }
@@ -47,6 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Method 4: Check for any role-related field
       else if (user.role) {
         userRole = user.role;
+      }
+      // Method 5: Check for admin indicators in email or nickname
+      else if (user.email?.includes('admin') || user.nickname === 'admin') {
+        userRole = 'admin';
+        console.log("Admin role assigned based on email/nickname");
       }
       
       console.log("Extracted role:", userRole);
