@@ -24,8 +24,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (user && isAuthenticated && !isLoading) {
-      // Extract role from Auth0 user metadata or app_metadata
-      const userRole = user['https://your-app.com/role'] || user.app_metadata?.role || 'user';
+      // Debug: Log the entire user object to see available properties
+      console.log("Auth0 user object:", user);
+      console.log("User app_metadata:", user.app_metadata);
+      console.log("User user_metadata:", user.user_metadata);
+      
+      // Try multiple ways to extract the role
+      let userRole = 'user'; // default role
+      
+      // Method 1: Check custom claim
+      if (user['https://your-app.com/role']) {
+        userRole = user['https://your-app.com/role'];
+      }
+      // Method 2: Check app_metadata
+      else if (user.app_metadata?.role) {
+        userRole = user.app_metadata.role;
+      }
+      // Method 3: Check user_metadata
+      else if (user.user_metadata?.role) {
+        userRole = user.user_metadata.role;
+      }
+      // Method 4: Check for any role-related field
+      else if (user.role) {
+        userRole = user.role;
+      }
+      
+      console.log("Extracted role:", userRole);
       
       setCurrentUser({
         id: user.sub || '',
