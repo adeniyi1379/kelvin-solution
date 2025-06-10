@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,9 +7,11 @@ import TransactionTab from './tabs/TransactionTab';
 import RecordsTab from './tabs/RecordsTab';
 import DebtsTab from './tabs/DebtsTab';
 import AdminTab from './tabs/AdminTab';
+import { useAuth } from '@/context/AuthContext';
 
 const Layout: React.FC = () => {
   const { loginWithRedirect, logout, isAuthenticated, isLoading, user } = useAuth0();
+  const { isAdmin } = useAuth();
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -48,28 +51,36 @@ const Layout: React.FC = () => {
 
       <main className="container py-6">
         <Tabs defaultValue="transaction" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className={`grid w-full mb-8 ${isAdmin ? 'grid-cols-5' : 'grid-cols-1'}`}>
             <TabsTrigger value="transaction">Transaction</TabsTrigger>
-            <TabsTrigger value="records">Records</TabsTrigger>
-            <TabsTrigger value="debts">Debts</TabsTrigger>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="admin">Admin</TabsTrigger>
+            {isAdmin && (
+              <>
+                <TabsTrigger value="records">Records</TabsTrigger>
+                <TabsTrigger value="debts">Debts</TabsTrigger>
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="admin">Admin</TabsTrigger>
+              </>
+            )}
           </TabsList>
           <TabsContent value="transaction">
             <TransactionTab />
           </TabsContent>
-          <TabsContent value="records">
-            <RecordsTab />
-          </TabsContent>
-          <TabsContent value="debts">
-            <DebtsTab />
-          </TabsContent>
-          <TabsContent value="dashboard">
-            <DashboardAnalytics />
-          </TabsContent>
-          <TabsContent value="admin">
-            <AdminTab />
-          </TabsContent>
+          {isAdmin && (
+            <>
+              <TabsContent value="records">
+                <RecordsTab />
+              </TabsContent>
+              <TabsContent value="debts">
+                <DebtsTab />
+              </TabsContent>
+              <TabsContent value="dashboard">
+                <DashboardAnalytics />
+              </TabsContent>
+              <TabsContent value="admin">
+                <AdminTab />
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </main>
     </div>
