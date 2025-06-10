@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
   id: string;
@@ -24,55 +23,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (user?.email && isAuthenticated) {
-        try {
-          // Try to fetch user profile from Supabase
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("email", user.email)
-            .single();
-
-          if (data && !error) {
-            setCurrentUser({
-              id: String(data.id),
-              username: data.username || user.name || user.email,
-              role: data.role === "admin" ? "admin" : "user",
-              email: user.email,
-            });
-          } else {
-            // Create a new profile if not found
-            const { data: newProfile, error: insertError } = await supabase
-              .from("profiles")
-              .insert([{ 
-                email: user.email, 
-                username: user.name || user.email, 
-                role: "user" 
-              }])
-              .select()
-              .single();
-
-            if (newProfile && !insertError) {
-              setCurrentUser({
-                id: String(newProfile.id),
-                username: newProfile.username || user.name || user.email,
-                role: newProfile.role === "admin" ? "admin" : "user",
-                email: user.email,
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-          setCurrentUser(null);
-        }
-      } else {
-        setCurrentUser(null);
-      }
-    };
-
-    if (!isLoading) {
-      fetchProfile();
+    if (user && isAuthenticated && !isLoading) {
+      // Extract role from Auth0 user metadata or app_metadata
+      const userRole = user['https://your-app.com/role'] || user.app_metadata?.role || 'user';
+      
+      setCurrentUser({
+        id: user.sub || '',
+        username: user.name || user.email || '',
+        role: userRole === "admin" ? "admin" : "user",
+        email: user.email,
+      });
+    } else {
+      setCurrentUser(null);
     }
   }, [user, isAuthenticated, isLoading]);
 
