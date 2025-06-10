@@ -1,5 +1,4 @@
 
-// src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,51 +25,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (user && user.email) {
-        // Try to fetch user profile from Supabase
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("email", user.email)
-          .single();
-
-        if (data) {
-          setCurrentUser({
-            id: data.id.toString(), // Convert to string if needed
-            username: data.username || user.name || user.email,
-            role: data.role === "admin" ? "admin" : "user", // Ensure role is either "admin" or "user"
-            email: user.email,
-          });
-        } else if (!error) {
-          // Optionally, create a new profile if not found
-          const { data: newProfile } = await supabase
+      if (user?.email && isAuthenticated) {
+        try {
+          // Try to fetch user profile from Supabase
+          const { data, error } = await supabase
             .from("profiles")
-            .insert([{ email: user.email, username: user.name || user.email, role: "user" }])
-            .select()
+            .select("*")
+            .eq("email", user.email)
             .single();
 
-          if (newProfile) {
+          if (data && !error) {
             setCurrentUser({
-              id: newProfile.id.toString(), // Convert to string if needed
-              username: newProfile.username || user.name || user.email,
-              role: newProfile.role === "admin" ? "admin" : "user", // Ensure role is either "admin" or "user"
+              id: String(data.id),
+              username: data.username || user.name || user.email,
+              role: data.role === "admin" ? "admin" : "user",
               email: user.email,
             });
+          } else {
+            // Create a new profile if not found
+            const { data: newProfile, error: insertError } = await supabase
+              .from("profiles")
+              .insert([{ 
+                email: user.email, 
+                username: user.name || user.email, 
+                role: "user" 
+              }])
+              .select()
+              .single();
+
+            if (newProfile && !insertError) {
+              setCurrentUser({
+                id: String(newProfile.id),
+                username: newProfile.username || user.name || user.email,
+                role: newProfile.role === "admin" ? "admin" : "user",
+                email: user.email,
+              });
+            }
           }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          setCurrentUser(null);
         }
       } else {
         setCurrentUser(null);
       }
     };
 
-    if (isAuthenticated) {
+    if (!isLoading) {
       fetchProfile();
-    } else {
-      setCurrentUser(null);
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, isLoading]);
 
-  const value = {
+  const value: AuthContextType = {
     currentUser,
     isAuthenticated,
     isAdmin: currentUser?.role === "admin",

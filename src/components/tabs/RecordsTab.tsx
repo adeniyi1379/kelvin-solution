@@ -22,9 +22,9 @@ const RecordsTab = () => {
     );
   });
 
-  // Sort transactions by date descending (latest first)
+  // Sort transactions by date descending (latest first) - fixed type issue
   const sortedTransactions = [...filteredTransactions].sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
   // Pagination logic
