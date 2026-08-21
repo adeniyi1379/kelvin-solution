@@ -207,6 +207,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin: boolean
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          is_admin?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

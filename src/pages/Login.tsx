@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { loginWithRedirect } = useAuth0();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,16 +29,16 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Use Auth0 login
-      await loginWithRedirect({
-        appState: {
-          returnTo: window.location.pathname
-        },
-        authorizationParams: {
-          login_hint: email
-        }
-      });
-      // Auth0 will handle redirect, no need to set loading state back
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        toast.error(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // Auth state updates via onAuthStateChange; go to the app
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Login error:', error);
       toast.error('An unexpected error occurred');
@@ -89,7 +90,7 @@ const Login = () => {
         </form>
         
         <div className="px-6 pb-4 text-center text-xs text-gray-500">
-          <p className="mt-2">Note: Using Auth0 for authentication</p>
+          <p className="mt-2">Accounts are created by your administrator</p>
         </div>
       </Card>
     </div>

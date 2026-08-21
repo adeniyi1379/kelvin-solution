@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
   id: string;
@@ -13,65 +12,71 @@ interface AuthContextType {
   currentUser: UserProfile | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  logout: () => void;
+  isLoading: boolean;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated, logout, isLoading } = useAuth0();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user && isAuthenticated && !isLoading) {
-      // Debug: Log the entire user object to see available properties
-      console.log("Auth0 user object:", user);
-      console.log("User app_metadata:", user.app_metadata);
-      console.log("User user_metadata:", user.user_metadata);
-      
-      // Try multiple ways to extract the role
-      let userRole = 'user'; // default role
-      
-      // Method 1: Check custom claim (namespace format)
-      if (user['https://your-app.com/role']) {
-        userRole = user['https://your-app.com/role'];
-      }
-      // Method 2: Check app_metadata
-      else if (user.app_metadata?.role) {
-        userRole = user.app_metadata.role;
-      }
-      // Method 3: Check user_metadata
-      else if (user.user_metadata?.role) {
-        userRole = user.user_metadata.role;
-      }
-      // Method 4: Check for any role-related field
-      else if (user.role) {
-        userRole = user.role;
-      }
-      // Method 5: Check for admin indicators in email or nickname
-      else if (user.email?.includes('admin') || user.nickname === 'admin') {
-        userRole = 'admin';
-        console.log("Admin role assigned based on email/nickname");
-      }
-      
-      console.log("Extracted role:", userRole);
-      
+    let mounted = true;
+
+    const loadProfile = async (userId: string, email?: string) => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("is_admin")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!mounted) return;
+
       setCurrentUser({
-        id: user.sub || '',
-        username: user.name || user.email || '',
-        role: userRole === "admin" ? "admin" : "user",
-        email: user.email,
+        id: userId,
+        username: email ?? "",
+        role: data?.is_admin ? "admin" : "user",
+        email,
       });
-    } else {
-      setCurrentUser(null);
-    }
-  }, [user, isAuthenticated, isLoading]);
+      setIsLoading(false);
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
+        loadProfile(session.user.id, session.user.email ?? undefined);
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        loadProfile(session.user.id, session.user.email ?? undefined);
+      } else {
+        setCurrentUser(null);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setCurrentUser(null);
+  };
 
   const value: AuthContextType = {
     currentUser,
-    isAuthenticated,
+    isAuthenticated: currentUser !== null,
     isAdmin: currentUser?.role === "admin",
-    logout: () => logout({ logoutParams: { returnTo: window.location.origin } }),
+    isLoading,
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

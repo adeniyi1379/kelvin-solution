@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardAnalytics from './tabs/DashboardAnalytics';
 import TransactionTab from './tabs/TransactionTab';
@@ -10,7 +9,7 @@ import AdminTab from './tabs/AdminTab';
 import { useAuth } from '@/context/AuthContext';
 
 const Layout: React.FC = () => {
-  const { loginWithRedirect, logout, isAuthenticated, isLoading, user } = useAuth0();
+  const { currentUser, isAuthenticated, isLoading, logout } = useAuth();
   const { isAdmin } = useAuth();
 
   if (isLoading) return <div>Loading...</div>;
@@ -22,7 +21,7 @@ const Layout: React.FC = () => {
         
         <button
           className="px-4 py-2 bg-red-600 text-white rounded"
-          onClick={() => loginWithRedirect()}
+          onClick={() => { window.location.href = '/login'; }}
         >
           Log In
         </button>
@@ -38,10 +37,10 @@ const Layout: React.FC = () => {
             <h1 className="text-2xl font-bold" style={{ color: '#FF5733' }}>Kelvin's Place Gadget</h1>
           </div>
           <div>
-            <span className="mr-4">{user?.name}</span>
+            <span className="mr-4">{currentUser?.username}</span>
             <button
               className="px-4 py-2 bg-red-500 text-white rounded"
-              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+              onClick={() => logout()}
             >
               Log Out
             </button>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
 
 interface Transaction {
   id: number;
@@ -50,6 +51,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [phones, setPhones] = useState<Phone[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -59,12 +61,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      // Clear data when logged out
+      setTransactions([]);
+      setPhones([]);
+      setServices([]);
+      setPhoneModels([]);
+      setServiceTypes([]);
+      return;
+    }
     fetchTransactions();
     getPhones();
     getServices();
     fetchPhoneModels();
     fetchServiceTypes();
-  }, []);
+  }, [isAuthenticated]);
 
   const fetchTransactions = async () => {
     setLoading(true);
