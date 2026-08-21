@@ -143,7 +143,7 @@ const PhoneModelsSection = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center py-6 text-gray-500">
+                  <TableCell colSpan={2} className="text-center py-6 text-muted-foreground">
                     No phone models available
                   </TableCell>
                 </TableRow>
@@ -286,7 +286,7 @@ const ServiceTypesSection = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center py-6 text-gray-500">
+                  <TableCell colSpan={2} className="text-center py-6 text-muted-foreground">
                     No service types available
                   </TableCell>
                 </TableRow>
@@ -417,8 +417,8 @@ const UserManagementSection = () => {
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
                           user.role === "admin"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-blue-100 text-blue-800"
+                            ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
                         }`}
                       >
                         {user.role}
@@ -437,7 +437,7 @@ const UserManagementSection = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                  <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
                     No users available
                   </TableCell>
                 </TableRow>

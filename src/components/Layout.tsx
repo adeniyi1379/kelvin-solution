@@ -8,6 +8,7 @@ import RecordsTab from './tabs/RecordsTab';
 import DebtsTab from './tabs/DebtsTab';
 import AdminTab from './tabs/AdminTab';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const Layout: React.FC = () => {
   const { currentUser, isAuthenticated, isLoading, logout } = useAuth();
@@ -32,14 +33,15 @@ const Layout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="bg-card shadow">
         <div className="container flex justify-between items-center py-4">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold" style={{ color: '#FF5733' }}>Kelvin's Place Gadget</h1>
           </div>
-          <div>
-            <span className="mr-4">{currentUser?.username}</span>
+          <div className="flex items-center gap-2">
+            <span className="mr-2">{currentUser?.username}</span>
+            <ThemeToggle />
             <button
               className="px-4 py-2 bg-red-500 text-white rounded"
               onClick={() => logout()}

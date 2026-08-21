@@ -25,7 +25,7 @@ const DebtsTab = () => {
   return (
     <>
       <div className="mb-6">
-        <div className="bg-white rounded-lg border p-6 shadow-sm">
+        <div className="bg-card rounded-lg border p-6 shadow-sm">
           <h3 className="text-lg font-medium mb-2">Total Outstanding Debt</h3>
           <p className="text-3xl font-bold text-red-600">#{totalDebt.toFixed(2)}</p>
         </div>
@@ -78,7 +78,7 @@ const DebtsTab = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No unpaid transactions
                     </TableCell>
                   </TableRow>

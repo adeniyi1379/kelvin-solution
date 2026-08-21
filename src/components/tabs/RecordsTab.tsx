@@ -85,8 +85,8 @@ const RecordsTab = () => {
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
                           transaction.isPaid
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
+                            : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
                         }`}
                       >
                         {transaction.isPaid ? "Paid" : "Unpaid"}
@@ -99,7 +99,7 @@ const RecordsTab = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                     {searchTerm ? 'No transactions match your search' : 'No transactions recorded yet'}
                   </TableCell>
                 </TableRow>
@@ -110,7 +110,7 @@ const RecordsTab = () => {
         {/* Pagination Controls */}
         <div className="flex justify-between items-center mt-4">
           <button
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-secondary text-secondary-foreground rounded disabled:opacity-50"
             onClick={handlePrev}
             disabled={page === 0}
           >
@@ -120,7 +120,7 @@ const RecordsTab = () => {
             Page {page + 1} of {totalPages || 1}
           </span>
           <button
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-secondary text-secondary-foreground rounded disabled:opacity-50"
             onClick={handleNext}
             disabled={page >= totalPages - 1}
           >

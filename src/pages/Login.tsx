@@ -47,7 +47,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle className="text-2xl">Phone Sales Manager</CardTitle>
