@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardAnalytics from './tabs/DashboardAnalytics';
 import TransactionTab from './tabs/TransactionTab';
@@ -11,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 const Layout: React.FC = () => {
   const { currentUser, isAuthenticated, isLoading, logout } = useAuth();
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -21,7 +23,7 @@ const Layout: React.FC = () => {
         
         <button
           className="px-4 py-2 bg-red-600 text-white rounded"
-          onClick={() => { window.location.href = '/login'; }}
+          onClick={() => navigate('/login')}
         >
           Log In
         </button>
